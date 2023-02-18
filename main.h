@@ -1,17 +1,14 @@
-
 #define BCAST_ADDR 100
 #define PAYLOAD_MAX 100
 #define STRING_MAX 100
 #define NAME_LENGTH 100
 
 enum NetNodeType { /* Types of network nodes */
-    HOST,
-    SWITCH
+    HOST, SWITCH
 };
 
 enum NetLinkType { /* Types of linkls */
-    PIPE,
-    SOCKET
+    PIPE, SOCKET
 };
 
 struct net_node { /* Network node, e.g., host or switch */

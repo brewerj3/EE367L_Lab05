@@ -13,11 +13,10 @@
 #include "host.h"
 
 
-void main()
-{
+void main() {
 
     pid_t pid;  /* Process id */
-    int k=0;
+    int k = 0;
     int status;
     struct net_node *node_list;
     struct net_node *p_node;
@@ -40,12 +39,10 @@ void main()
         if (pid == -1) {
             printf("Error:  the fork() failed\n");
             return;
-        }
-        else if (pid == 0) { /* The child process, which is a node  */
+        } else if (pid == 0) { /* The child process, which is a node  */
             if (p_node->type == HOST) {  /* Execute host routine */
                 host_main(p_node->id);
-            }
-            else if (p_node->type = SWITCH) {
+            } else if (p_node->type = SWITCH) {
                 /* Execute switch routine, which you have to write */
             }
             return;

@@ -21,25 +21,26 @@
 #define TENMILLISEC 10000
 #define DELAY_FOR_HOST_REPLY 10  /* Delay in ten of milliseconds */
 
-void display_host(struct man_port_at_man *list,
-                  struct man_port_at_man *curr_host);
-void change_host(struct man_port_at_man *list,
-                 struct man_port_at_man **curr_host);
-void display_host(struct man_port_at_man *list,
-                  struct man_port_at_man *curr_host);
+void display_host(struct man_port_at_man *list, struct man_port_at_man *curr_host);
+
+void change_host(struct man_port_at_man *list, struct man_port_at_man **curr_host);
+
+void display_host(struct man_port_at_man *list, struct man_port_at_man *curr_host);
+
 void display_host_state(struct man_port_at_man *curr_host);
+
 void set_host_dir(struct man_port_at_man *curr_host);
+
 char man_get_user_cmd(int curr_host);
 
 
 /* Get the user command */
-char man_get_user_cmd(int curr_host)
-{
+char man_get_user_cmd(int curr_host) {
     char cmd;
 
-    while(1) {
+    while (1) {
         /* Display command options */
-        printf("\nCommands (Current host ID = %d):\n",curr_host );
+        printf("\nCommands (Current host ID = %d):\n", curr_host);
         printf("   (s) Display host's state\n");
         printf("   (m) Set host's main directory\n");
         printf("   (h) Display all hosts\n");
@@ -51,11 +52,10 @@ char man_get_user_cmd(int curr_host)
         printf("   Enter Command: ");
         do {
             cmd = getchar();
-        } while(cmd == ' ' || cmd == '\n'); /* get rid of junk from stdin */
+        } while (cmd == ' ' || cmd == '\n'); /* get rid of junk from stdin */
 
 /* Ensure that the command is valid */
-        switch(cmd)
-        {
+        switch (cmd) {
             case 's':
             case 'm':
             case 'h':
@@ -63,7 +63,8 @@ char man_get_user_cmd(int curr_host)
             case 'p':
             case 'u':
             case 'd':
-            case 'q': return cmd;
+            case 'q':
+                return cmd;
             default:
                 printf("Invalid: you entered %c\n\n", cmd);
         }
@@ -71,9 +72,7 @@ char man_get_user_cmd(int curr_host)
 }
 
 /* Change the current host */
-void change_host(struct man_port_at_man *list,
-                 struct man_port_at_man **curr_host)
-{
+void change_host(struct man_port_at_man *list, struct man_port_at_man **curr_host) {
     int new_host_id;
 
 // display_host(list, *curr_host);
@@ -83,7 +82,7 @@ void change_host(struct man_port_at_man *list,
 
 /* Find the port of the new host, and then set it as the curr_host */
     struct man_port_at_man *p;
-    for (p=list; p!=NULL; p=p->next) {
+    for (p = list; p != NULL; p = p->next) {
         if (p->host_id == new_host_id) {
             *curr_host = p;
             break;
@@ -92,13 +91,11 @@ void change_host(struct man_port_at_man *list,
 }
 
 /* Display the hosts on the consosle */
-void display_host(struct man_port_at_man *list,
-                  struct man_port_at_man *curr_host)
-{
+void display_host(struct man_port_at_man *list, struct man_port_at_man *curr_host) {
     struct man_port_at_man *p;
 
     printf("\nHost list:\n");
-    for (p=list; p!=NULL; p=p->next) {
+    for (p = list; p != NULL; p = p->next) {
         printf("   Host id = %d ", p->host_id);
         if (p->host_id == curr_host->host_id) {
             printf("(<- connected)");
@@ -114,8 +111,7 @@ void display_host(struct man_port_at_man *list,
  * Wait for reply from host, which should be the host's state.
  * Then display on the console.
  */
-void display_host_state(struct man_port_at_man *curr_host)
-{
+void display_host_state(struct man_port_at_man *curr_host) {
     char msg[MAN_MSG_LENGTH];
     char reply[MAN_MSG_LENGTH];
     char dir[NAME_LENGTH];
@@ -137,8 +133,7 @@ void display_host_state(struct man_port_at_man *curr_host)
 }
 
 
-void set_host_dir(struct man_port_at_man *curr_host)
-{
+void set_host_dir(struct man_port_at_man *curr_host) {
     char name[NAME_LENGTH];
     char msg[NAME_LENGTH];
     int n;
@@ -161,8 +156,7 @@ void set_host_dir(struct man_port_at_man *curr_host)
  * Wiat for a reply
  */
 
-void ping(struct man_port_at_man *curr_host)
-{
+void ping(struct man_port_at_man *curr_host) {
     char msg[MAN_MSG_LENGTH];
     char reply[MAN_MSG_LENGTH];
     int host_to_ping;
@@ -180,7 +174,7 @@ void ping(struct man_port_at_man *curr_host)
         n = read(curr_host->recv_fd, reply, MAN_MSG_LENGTH);
     }
     reply[n] = '\0';
-    printf("%s\n",reply);
+    printf("%s\n", reply);
 }
 
 
@@ -197,8 +191,7 @@ void ping(struct man_port_at_man *curr_host)
  *    -  id of the destination host
  *    -  name of file to transfer
  */
-int file_upload(struct man_port_at_man *curr_host)
-{
+int file_upload(struct man_port_at_man *curr_host) {
     int n;
     int host_id;
     char name[NAME_LENGTH];
@@ -219,8 +212,7 @@ int file_upload(struct man_port_at_man *curr_host)
 /*****************************
  * Main loop of the manager  *
  *****************************/
-void man_main()
-{
+void man_main() {
 
 // State
     struct man_port_at_man *host_list;
@@ -231,13 +223,12 @@ void man_main()
 
     char cmd;          /* Command entered by user */
 
-    while(1) {
+    while (1) {
         /* Get a command from the user */
         cmd = man_get_user_cmd(curr_host->host_id);
 
         /* Execute the command */
-        switch(cmd)
-        {
+        switch (cmd) {
             case 's': /* Display the current host's state */
                 display_host_state(curr_host);
                 break;
