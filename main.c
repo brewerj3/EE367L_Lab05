@@ -29,7 +29,6 @@ void main() {
     net_init();
     node_list = net_get_node_list(); /* Returns the list of nodes */
 
-
 /* Create nodes, which are child processwa */
 
     for (p_node = node_list; p_node != NULL; p_node = p_node->next) {
@@ -49,16 +48,10 @@ void main() {
         }
     }
 
-/*
- * Parent process: Execute manager routine.
- */
+// Parent process: Execute manager routine.
     man_main();
 
-
-/*
- * We reach here if the user quits the manager.
- * The following will terminate all the children processes.
- */
+// We reach here if the user quits the manager.  The following will terminate all the children processes.
     kill(0, SIGKILL); /* Kill all processes */
 }
 
