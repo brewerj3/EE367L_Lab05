@@ -11,3 +11,4 @@ add_executable(net367
         net.c net.h)
 
 file(COPY p2p.config DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY )
