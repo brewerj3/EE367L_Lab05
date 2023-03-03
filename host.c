@@ -533,7 +533,7 @@ void host_main(int host_id) {
                     // This ends a sending job
                 case JOB_FILE_UPLOAD_SEND_END: // @TODO this is not implemented
                     if(dir_valid == 1) {
-                        // DO nothin
+                        // Do nothin
                     }
                     break;
 
