@@ -9,6 +9,7 @@
 #include "net.h"
 #include "host.h"
 
+//#define DEBUG
 
 void packet_send(struct net_port *port, struct packet *p) {
     char msg[PAYLOAD_MAX + 4];
@@ -30,7 +31,6 @@ void packet_send(struct net_port *port, struct packet *p) {
 //              (int) p->dst);
     }
 
-    return;
 }
 
 int packet_recv(struct net_port *port, struct packet *p) {
@@ -49,11 +49,13 @@ int packet_recv(struct net_port *port, struct packet *p) {
                 p->payload[i] = msg[i + 4];
             }
 
-// printf("PACKET RECV, src=%d dst=%d p-src=%d p-dst=%d\n",
-//              (int) msg[0],
-//              (int) msg[1],
-//              (int) p->src,
-//              (int) p->dst);
+#ifdef DEBUG
+ printf("PACKET RECV, src=%d dst=%d p-src=%d p-dst=%d\n",
+              (int) msg[0],
+              (int) msg[1],
+              (int) p->src,
+              (int) p->dst);
+#endif
         }
     }
 
