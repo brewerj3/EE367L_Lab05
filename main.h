@@ -2,6 +2,7 @@
 #define PAYLOAD_MAX 100
 #define STRING_MAX 100
 #define NAME_LENGTH 100
+#define MAX_FILE_SIZE 1000
 
 enum NetNodeType { /* Types of network nodes */
     HOST, SWITCH
