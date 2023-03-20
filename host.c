@@ -524,19 +524,6 @@ void host_main(int host_id) {
                     }
                     break;
 
-                    // This starts a sending job
-                case JOB_FILE_UPLOAD_SEND_START: // @TODO this does not work currently
-                    if(dir_valid == 1){
-                    }
-                    break;
-
-                    // This ends a sending job
-                case JOB_FILE_UPLOAD_SEND_END: // @TODO this is not implemented
-                    if(dir_valid == 1) {
-                        // Do nothin
-                    }
-                    break;
-
                     /* The next two jobs are for the receving host */
 
                 case JOB_FILE_UPLOAD_RECV_START:

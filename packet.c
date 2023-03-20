@@ -61,7 +61,7 @@ int packet_recv(struct net_port *port, struct packet *p) {
             }
 
 #ifdef DEBUG // This is intended to print out the contents of the packet being received when DEBUG is active
- printf("PACKET RECV, src=%d dst=%d p-src=%d p-dst=%d\n",
+  printf("PACKET RECV, src=%d dst=%d p-src=%d p-dst=%d\n",
               (int) msg[0],
               (int) msg[1],
               (int) p->src,
