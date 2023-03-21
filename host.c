@@ -520,6 +520,8 @@ _Noreturn void host_main(int host_id) {
                                 middle_packet->dst = new_job->file_upload_dst;
                                 middle_packet->src = (char) host_id;
                                 middle_packet->type = PKT_FILE_UPLOAD_MIDDLE;
+                                // @TODO Add in sending the middle packets here
+                                free(middle_packet);
                             }
 
                             // This is what actually reads the file into the packet
