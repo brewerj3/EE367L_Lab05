@@ -513,11 +513,9 @@ _Noreturn void host_main(int host_id) {
                             if(fileSize < PKT_PAYLOAD_MAX) {
                                 int numberOfPackets = (fileSize - 100) / (100); // should contain the number of packets needed to send the file
                                 if(fileSize > 1000) {
-                                    numberOfPackets = 10;
+                                    numberOfPackets = 9;
                                 }
-                                if(numberOfPackets > 10) {
-                                    numberOfPackets = 10;
-                                }
+
                                 struct packet *middle_packet = (struct packet *) malloc(sizeof(struct packet));
                                 middle_packet->dst = new_job->file_upload_dst;
                                 middle_packet->src = (char) host_id;
