@@ -194,7 +194,7 @@ int job_q_num(struct job_queue *j_q) {
  *  Main
  */
 
-void host_main(int host_id) {
+_Noreturn void host_main(int host_id) {
 
 /* State */
     char dir[MAX_DIR_NAME];
@@ -330,7 +330,7 @@ void host_main(int host_id) {
         for (k = 0; k < node_port_num; k++) { /* Scan all ports */
 
             in_packet = (struct packet *) malloc(sizeof(struct packet));
-            n = packet_recv(node_port[k], in_packet);
+            n = packet_recv(node_port[k], in_packet);                   // This reads incoming packets
 
             if ((n > 0) && ((int) in_packet->dst == host_id)) {
                 new_job = (struct host_job *) malloc(sizeof(struct host_job));
@@ -377,6 +377,12 @@ void host_main(int host_id) {
                         new_job->type = JOB_FILE_UPLOAD_RECV_END;
                         job_q_add(&job_q, new_job);
                         break;
+
+                    case (char) PKT_FILE_UPLOAD_MIDDLE:         // Packet containing the middle contents of a file
+                        new_job->type = JOB_FILE_UPLOAD_MIDDLE;
+                        job_q_add(&job_q, new_job);
+                        break;
+
                     default:
                         free(in_packet);
                         free(new_job);
@@ -496,7 +502,7 @@ void host_main(int host_id) {
                             new_packet->src = (char) host_id;
                             new_packet->type = PKT_FILE_UPLOAD_END;
 
-
+                            // This is what actually reads the file into the packet
                             n = fread(string, sizeof(char), PKT_PAYLOAD_MAX, fp);
                             fclose(fp);
                             string[n] = '\0';
@@ -536,6 +542,14 @@ void host_main(int host_id) {
                      * to the file buffer data structure
                      */
                     file_buf_put_name(&f_buf_upload, new_job->packet->payload, new_job->packet->length);
+
+                    free(new_job->packet);
+                    free(new_job);
+                    break;
+
+                case JOB_FILE_UPLOAD_MIDDLE:
+                    // This adds the data to the file buffer and then frees the packet and job
+                    file_buf_add(&f_buf_upload, new_job->packet->payload, new_job->packet->length);
 
                     free(new_job->packet);
                     free(new_job);

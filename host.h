@@ -2,6 +2,7 @@
  * host.h
  */
 
+// Added JOB_FILE_UPLOAD_MIDDLE
 enum host_job_type {
     JOB_SEND_PKT_ALL_PORTS,
     JOB_PING_SEND_REQ,
@@ -9,7 +10,8 @@ enum host_job_type {
     JOB_PING_WAIT_FOR_REPLY,
     JOB_FILE_UPLOAD_SEND,
     JOB_FILE_UPLOAD_RECV_START,
-    JOB_FILE_UPLOAD_RECV_END
+    JOB_FILE_UPLOAD_RECV_END,
+    JOB_FILE_UPLOAD_MIDDLE
 };
 
 struct host_job {
@@ -31,4 +33,4 @@ struct job_queue {
     int occ;
 };
 
-void host_main(int host_id);
+//_Noreturn void host_main(int host_id);
