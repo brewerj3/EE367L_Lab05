@@ -378,6 +378,7 @@ _Noreturn void host_main(int host_id) {
                         job_q_add(&job_q, new_job);
                         break;
 
+                        // Added by Joshua Brewer
                     case (char) PKT_FILE_UPLOAD_MIDDLE:         // Packet containing the middle contents of a file
                         new_job->type = JOB_FILE_UPLOAD_MIDDLE;
                         job_q_add(&job_q, new_job);
@@ -501,6 +502,27 @@ _Noreturn void host_main(int host_id) {
                             new_packet->dst = new_job->file_upload_dst;
                             new_packet->src = (char) host_id;
                             new_packet->type = PKT_FILE_UPLOAD_END;
+
+                            // Find the size of the file
+                            FILE* fp2 = fp;
+                            fseek(fp2, 0L, SEEK_END);
+                            int fileSize = (int) ftell(fp2);
+                            free(fp2);
+
+                            // if file size is larger than PKT_PAYLOAD_MAX we need to break it up into several packets
+                            if(fileSize < PKT_PAYLOAD_MAX) {
+                                int numberOfPackets = (fileSize - 100) / (100); // should contain the number of packets needed to send the file
+                                if(fileSize > 1000) {
+                                    numberOfPackets = 10;
+                                }
+                                if(numberOfPackets > 10) {
+                                    numberOfPackets = 10;
+                                }
+                                struct packet *middle_packet = (struct packet *) malloc(sizeof(struct packet));
+                                middle_packet->dst = new_job->file_upload_dst;
+                                middle_packet->src = (char) host_id;
+                                middle_packet->type = PKT_FILE_UPLOAD_MIDDLE;
+                            }
 
                             // This is what actually reads the file into the packet
                             n = fread(string, sizeof(char), PKT_PAYLOAD_MAX, fp);
