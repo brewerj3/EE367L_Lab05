@@ -507,12 +507,15 @@ void host_main(int host_id) {
                             FILE *fp2 = fp;
                             fseek(fp2, 0L, SEEK_END);
                             int fileSize = (int) ftell(fp2);
+                            printf("filesize = %i\n",fileSize);
                             free(fp2);
 
                             // if file size is larger than PKT_PAYLOAD_MAX we need to break it up into several packets
                             if (fileSize > PKT_PAYLOAD_MAX) {
-                                int numberOfPackets = (fileSize - 100) /
-                                                      (100); // should contain the number of packets needed to send the file
+                                int numberOfPackets = (fileSize - PKT_PAYLOAD_MAX) / (PKT_PAYLOAD_MAX); // should contain the number of packets needed to send the file
+
+                                printf("number of packets = %i\n",numberOfPackets);
+
                                 if (fileSize > 1000) {
                                     numberOfPackets = 9;
                                 }
@@ -531,6 +534,7 @@ void host_main(int host_id) {
 
                                     // Read from file
                                     n = fread(string, sizeof(char), PKT_PAYLOAD_MAX, fp);
+                                    string[n] = '\n';
                                     for (int x = 0; x < n; x++) {
                                         middle_packet[j]->payload[x] = string[x];
                                     }
