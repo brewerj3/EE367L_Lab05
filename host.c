@@ -215,6 +215,7 @@ void host_main(int host_id) {
     int dst;
     char name[MAX_FILE_NAME];
     char string[PKT_PAYLOAD_MAX + 1];
+    char buffer[MAX_FILE_BUFFER + 1];
 
     FILE *fp;
 
@@ -224,6 +225,7 @@ void host_main(int host_id) {
     struct net_port *p;
     struct host_job *new_job;
     struct host_job *new_job2;
+    struct host_job *new_job3;
 
     struct job_queue job_q;
 
@@ -380,7 +382,7 @@ void host_main(int host_id) {
 
                         // Added by Joshua Brewer
                     case (char) PKT_FILE_UPLOAD_MIDDLE:         // Packet containing the middle contents of a file
-                        new_job->type = JOB_FILE_UPLOAD_MIDDLE;
+                        new_job->type = JOB_FILE_UPLOAD_SEND_MIDDLE;
                         job_q_add(&job_q, new_job);
                         break;
 
@@ -494,24 +496,17 @@ void host_main(int host_id) {
                             new_job2->packet = new_packet;
                             job_q_add(&job_q, new_job2);
 
-                            /*
-                             * Create the second packet which
-                             * has the file contents
-                             */
-                            new_packet = (struct packet *) malloc(sizeof(struct packet));
-                            new_packet->dst = new_job->file_upload_dst;
-                            new_packet->src = (char) host_id;
-                            new_packet->type = PKT_FILE_UPLOAD_END;
+
 
                             // Find the size of the file
-                            FILE *fp2 = fp;
+                            /*FILE *fp2 = fp;
                             fseek(fp2, 0L, SEEK_END);
                             int fileSize = (int) ftell(fp2);
                             printf("filesize = %i\n",fileSize);
-                            free(fp2);
+                            free(fp2);*/
 
                             // if file size is larger than PKT_PAYLOAD_MAX we need to break it up into several packets
-                            if (fileSize > PKT_PAYLOAD_MAX) {
+                            /*if (fileSize > PKT_PAYLOAD_MAX) {
                                 int numberOfPackets = (fileSize - PKT_PAYLOAD_MAX) / (PKT_PAYLOAD_MAX); // should contain the number of packets needed to send the file
 
                                 printf("number of packets = %i\n",numberOfPackets);
@@ -550,12 +545,59 @@ void host_main(int host_id) {
 
                                 free(middle_packet);
                                 free(middle_jobs);
-                            }
+                            }*/
 
                             // This is what actually reads the file into the packet
-                            n = fread(string, sizeof(char), PKT_PAYLOAD_MAX, fp);
+                            /*n = fread(string, sizeof(char), PKT_PAYLOAD_MAX, fp);
                             fclose(fp);
-                            string[n] = '\0';
+                            string[n] = '\0';*/
+
+                            n = fread(buffer, sizeof(char), MAX_FILE_BUFFER, fp); // fread return the number of characters in the file
+                            fclose(fp);
+                            buffer[n] = '\0'; // NULL terminate buffer
+                            while(n > MAX_MSG_LENGTH) {
+                                // Split up packets
+
+                                // Put 100 characters of buffer into string
+                                strncpy(string, buffer, MAX_MSG_LENGTH);
+
+                                // shift buffer 100 places
+                                for(int j = 0; buffer[j] != '\0'; j++) {
+                                    buffer[j] = buffer[j+MAX_MSG_LENGTH];
+                                }
+                                n = n - MAX_MSG_LENGTH;
+
+
+                                // Now send the middle packets using string as the payload
+
+                                // First define the packet structure
+                                new_packet = (struct packet *) malloc(sizeof(struct packet));
+                                new_packet->dst = new_job->file_upload_dst;
+                                new_packet->src = (char) host_id;
+                                new_packet->type = PKT_FILE_UPLOAD_MIDDLE;
+                                // Packet is now created
+
+                                // Fill the payload
+                                for(i = 0; i < MAX_MSG_LENGTH - 1; i++) {
+                                    new_packet->payload[i] = string[i];
+                                }
+                                new_packet->length = MAX_MSG_LENGTH;
+
+                                // Add the job to the job queue
+                                new_job3 = (struct host_job *) malloc(sizeof(struct host_job));
+                                new_job3->type = JOB_SEND_PKT_ALL_PORTS;
+                                new_job3->packet = new_packet;
+                                job_q_add(&job_q, new_job3);
+                            }
+
+                            /*
+                             * Create the end packet which
+                             * has the file contents
+                             */
+                            new_packet = (struct packet *) malloc(sizeof(struct packet));
+                            new_packet->dst = new_job->file_upload_dst;
+                            new_packet->src = (char) host_id;
+                            new_packet->type = PKT_FILE_UPLOAD_END;
 
                             for (i = 0; i < n; i++) {
                                 new_packet->payload[i] = string[i];
@@ -597,7 +639,7 @@ void host_main(int host_id) {
                     free(new_job);
                     break;
 
-                case JOB_FILE_UPLOAD_MIDDLE:
+                case JOB_FILE_UPLOAD_RECV_MIDDLE:
                     // This adds the data to the file buffer and then frees the packet and job
                     file_buf_add(&f_buf_upload, new_job->packet->payload, new_job->packet->length);
 
