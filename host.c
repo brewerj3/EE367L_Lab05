@@ -194,7 +194,7 @@ int job_q_num(struct job_queue *j_q) {
  *  Main
  */
 
-_Noreturn void host_main(int host_id) {
+void host_main(int host_id) {
 
 /* State */
     char dir[MAX_DIR_NAME];

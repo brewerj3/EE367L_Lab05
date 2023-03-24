@@ -70,5 +70,6 @@ int packet_recv(struct net_port *port, struct packet *p) {
         }
     }
 
+    // Return the read error code
     return (n);
 }
