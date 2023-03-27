@@ -574,7 +574,7 @@ _Noreturn void host_main(int host_id) {
                     }
                     break;
 
-                    /* The next two jobs are for the receving host */
+                    /* The next two jobs are for the receiving host */
 
                 case JOB_FILE_UPLOAD_RECV_START:
 
