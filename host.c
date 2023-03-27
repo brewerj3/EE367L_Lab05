@@ -496,17 +496,12 @@ _Noreturn void host_main(int host_id) {
                             new_job2->packet = new_packet;
                             job_q_add(&job_q, new_job2);
 
-
-                            // This is what actually reads the file into the packet
-                            /*n = fread(string, sizeof(char), PKT_PAYLOAD_MAX, fp);
-                            fclose(fp);
-                            string[n] = '\0';*/
-
                             // fread returns the number of characters in the file
                             n = fread(buffer, sizeof(char), MAX_FILE_BUFFER, fp);
                             fclose(fp);
-
                             buffer[n] = '\0'; // NULL terminate buffer
+
+                            // If n is larger than the max message length it must be split up into multiple packets
                             while(n > MAX_MSG_LENGTH) {
                                 // Split up packets
 
@@ -529,7 +524,7 @@ _Noreturn void host_main(int host_id) {
                                 // Packet is now created
 
                                 // Fill the payload
-                                for(i = 0; i < MAX_MSG_LENGTH - 1; i++) {
+                                for(i = 0; i < MAX_MSG_LENGTH; i++) {
                                     new_packet->payload[i] = string[i];
                                 }
                                 new_packet->length = MAX_MSG_LENGTH;
