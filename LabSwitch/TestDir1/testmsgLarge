@@ -1,0 +1,8 @@
+4.1 Improvement 1: File transfers
+The currently host nodes can upload files to another host node, but the files must be at most 100 bytes. Improve the
+upload so that it can transfer files of at most 1000 bytes. Use the same packet format as before, but you will have to
+break up a large file into multiple packets. The packets are transferred and reassembled at the destination host. You
+may specify and use other types of packets but the payload must be no more than 100 bytes.
+Also implement a file download from another host, where a file can have up to 1000 bytes. For this operation, a host
+will request a download of a file from another host, and provide the file name. The destination node will either transfer
+the file to the requesting host or indicate it has no such file in its current directory.

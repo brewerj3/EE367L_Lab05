@@ -194,7 +194,7 @@ int job_q_num(struct job_queue *j_q) {
  *  Main
  */
 
-void host_main(int host_id) {
+_Noreturn void host_main(int host_id) {
 
 /* State */
     char dir[MAX_DIR_NAME];
@@ -497,63 +497,15 @@ void host_main(int host_id) {
                             job_q_add(&job_q, new_job2);
 
 
-
-                            // Find the size of the file
-                            /*FILE *fp2 = fp;
-                            fseek(fp2, 0L, SEEK_END);
-                            int fileSize = (int) ftell(fp2);
-                            printf("filesize = %i\n",fileSize);
-                            free(fp2);*/
-
-                            // if file size is larger than PKT_PAYLOAD_MAX we need to break it up into several packets
-                            /*if (fileSize > PKT_PAYLOAD_MAX) {
-                                int numberOfPackets = (fileSize - PKT_PAYLOAD_MAX) / (PKT_PAYLOAD_MAX); // should contain the number of packets needed to send the file
-
-                                printf("number of packets = %i\n",numberOfPackets);
-
-                                if (fileSize > 1000) {
-                                    numberOfPackets = 9;
-                                }
-                                struct packet **middle_packet = (struct packet **) malloc(
-                                        sizeof(struct packet) * numberOfPackets);
-                                struct host_job **middle_jobs = (struct host_job **) malloc(
-                                        sizeof(struct host_job) * numberOfPackets);
-                                for (int j = 0; j < numberOfPackets; j++) {
-                                    // Create array of packets for middle of files
-                                    middle_packet[j]->dst = new_job->file_upload_dst;
-                                    middle_packet[j]->src = (char) host_id;
-                                    middle_packet[j]->type = PKT_FILE_UPLOAD_MIDDLE;
-
-                                    // Add packets to jobs
-
-
-                                    // Read from file
-                                    n = fread(string, sizeof(char), PKT_PAYLOAD_MAX, fp);
-                                    string[n] = '\n';
-                                    for (int x = 0; x < n; x++) {
-                                        middle_packet[j]->payload[x] = string[x];
-                                    }
-
-                                    middle_packet[j]->length = n;
-
-                                    // Create middle jobs to send the packet and put the job in queue
-                                    middle_jobs[i]->type = JOB_SEND_PKT_ALL_PORTS;
-                                    middle_jobs[i]->packet = middle_packet[i];
-                                    job_q_add(&job_q, middle_jobs[i]);
-
-                                }
-
-                                free(middle_packet);
-                                free(middle_jobs);
-                            }*/
-
                             // This is what actually reads the file into the packet
                             /*n = fread(string, sizeof(char), PKT_PAYLOAD_MAX, fp);
                             fclose(fp);
                             string[n] = '\0';*/
 
-                            n = fread(buffer, sizeof(char), MAX_FILE_BUFFER, fp); // fread return the number of characters in the file
+                            // fread returns the number of characters in the file
+                            n = fread(buffer, sizeof(char), MAX_FILE_BUFFER, fp);
                             fclose(fp);
+
                             buffer[n] = '\0'; // NULL terminate buffer
                             while(n > MAX_MSG_LENGTH) {
                                 // Split up packets
@@ -562,7 +514,7 @@ void host_main(int host_id) {
                                 strncpy(string, buffer, MAX_MSG_LENGTH);
 
                                 // shift buffer 100 places
-                                for(int j = 0; buffer[j] != '\0'; j++) {
+                                for(int j = 0; buffer[j] != '\0' || j < MAX_MSG_LENGTH; j++) {
                                     buffer[j] = buffer[j+MAX_MSG_LENGTH];
                                 }
                                 n = n - MAX_MSG_LENGTH;
@@ -584,10 +536,10 @@ void host_main(int host_id) {
                                 new_packet->length = MAX_MSG_LENGTH;
 
                                 // Add the job to the job queue
-                                new_job3 = (struct host_job *) malloc(sizeof(struct host_job));
-                                new_job3->type = JOB_SEND_PKT_ALL_PORTS;
-                                new_job3->packet = new_packet;
-                                job_q_add(&job_q, new_job3);
+                                new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
+                                new_job2->type = JOB_SEND_PKT_ALL_PORTS;
+                                new_job2->packet = new_packet;
+                                job_q_add(&job_q, new_job2);
                             }
 
                             /*
@@ -600,7 +552,7 @@ void host_main(int host_id) {
                             new_packet->type = PKT_FILE_UPLOAD_END;
 
                             for (i = 0; i < n; i++) {
-                                new_packet->payload[i] = string[i];
+                                new_packet->payload[i] = buffer[i];
                             }
 
                             new_packet->length = n;

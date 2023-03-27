@@ -34,4 +34,4 @@ struct job_queue {
     int occ;
 };
 
-void host_main(int host_id);
+_Noreturn void host_main(int host_id);
