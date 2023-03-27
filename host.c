@@ -382,7 +382,7 @@ _Noreturn void host_main(int host_id) {
 
                         // Added by Joshua Brewer
                     case (char) PKT_FILE_UPLOAD_MIDDLE:         // Packet containing the middle contents of a file
-                        new_job->type = JOB_FILE_UPLOAD_SEND_MIDDLE;
+                        new_job->type = JOB_FILE_UPLOAD_RECV_MIDDLE;
                         job_q_add(&job_q, new_job);
                         break;
 
@@ -518,7 +518,6 @@ _Noreturn void host_main(int host_id) {
                                     buffer[j] = buffer[j+MAX_MSG_LENGTH];
                                 }
                                 n = n - MAX_MSG_LENGTH;
-
 
                                 // Now send the middle packets using string as the payload
 
