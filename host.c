@@ -329,13 +329,13 @@ _Noreturn void host_main(int host_id) {
                     new_packet->src = (char) host_id;
                     new_packet->dst = (char) dst;
                     new_packet->type = (char) PKT_FILE_DOWNLOAD_REQ;
-                    for(i = 0; man_msg[i] != '\0'; i++) {
-                        new_packet->payload[i] = man_msg[i];
+                    for(i = 0; name[i] != '\0'; i++) {
+                        new_packet->payload[i] = name[i];
                     }
                     new_packet->payload[i] = '\0';
                     new_packet->length = i;
 
-                    // Create a new job
+                    // Create a new job to send the packet
                     new_job = (struct host_job *) malloc(sizeof(struct host_job));
                     new_job->packet = new_packet;
                     new_job->type = JOB_SEND_PKT_ALL_PORTS;
@@ -410,12 +410,12 @@ _Noreturn void host_main(int host_id) {
 
                     case(char) PKT_FILE_DOWNLOAD_REQ:           // Start a upload
                          new_job->type = JOB_FILE_UPLOAD_SEND;
-                         sscanf(in_packet->payload, "%d %s", &dst, name);
-                         for(i = 0; name[i] != '\0'; i++) {
-                             new_job->fname_upload[i] = name[i];
+
+                         for(i = 0; in_packet->payload[i] != '\0'; i++) {
+                             new_job->fname_upload[i] = in_packet->payload[i];
                          }
                          new_job->fname_upload[i] = '\0';
-                         new_job->file_upload_dst = dst;
+                         new_job->file_upload_dst = (int) in_packet->src;
                          job_q_add(&job_q, new_job);
                          break;
 
