@@ -221,6 +221,7 @@ _Noreturn void host_main(int host_id) {
 
     struct packet *in_packet; /* Incoming packet */
     struct packet *new_packet;
+    struct packet *new_packet2;
 
     struct net_port *p;
     struct host_job *new_job;
@@ -320,6 +321,30 @@ _Noreturn void host_main(int host_id) {
                     job_q_add(&job_q, new_job);
 
                     break;
+                case 'd': // Request a file to be downloaded
+                    sscanf(man_msg, "%d %s", &dst, name);
+
+                    // Create a new packet
+                    new_packet = (struct packet *) malloc(sizeof(struct packet));
+                    new_packet->src = (char) host_id;
+                    new_packet->dst = (char) dst;
+                    new_packet->type = (char) PKT_FILE_DOWNLOAD_REQ;
+
+                    // Create a new job
+                    new_job = (struct host_job *) malloc(sizeof(struct host_job));
+                    for(i = 0; name[i] != '\0'; i++) {
+                        new_job->fname_download[i] = name[i];
+                    }
+                    new_job->fname_upload[i] = '\0';
+
+                    new_packet->length = i;
+
+                    new_job->file_upload_dst = host_id;
+                    new_job->packet = new_packet;
+                    new_job->type = JOB_SEND_PKT_ALL_PORTS;
+                    job_q_add( &job_q, new_job);
+                    break;
+
                 default:;
             }
         }
@@ -385,6 +410,11 @@ _Noreturn void host_main(int host_id) {
                         new_job->type = JOB_FILE_UPLOAD_RECV_MIDDLE;
                         job_q_add(&job_q, new_job);
                         break;
+
+                    case(char) PKT_FILE_DOWNLOAD_REQ:           // Start a upload
+                         new_job->type = JOB_FILE_DOWNLOAD_REQ;
+                         job_q_add(&job_q, new_job);
+                         break;
 
                     default:
                         free(in_packet);
@@ -632,6 +662,29 @@ _Noreturn void host_main(int host_id) {
                     }
 
                     break;
+
+                    // Request a file to be downloaded.
+                case JOB_FILE_DOWNLOAD_REQ:
+                    strcpy(string, new_job->fname_download);
+                    if(access(string, F_OK) == 0) {
+                        // File exists
+
+                        new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
+                        new_job2->type = JOB_FILE_UPLOAD_SEND;
+                        new_job2->file_upload_dst = (int) new_job->packet->src;
+                        for(i = 0; new_job->fname_download[i] != '\0'; i++) {
+                            new_job2->fname_upload[i] = new_job->fname_download[i];
+                        }
+                        new_job2->fname_upload[i] = '\0';
+                        job_q_add(&job_q, new_job2);
+                        free(new_job->packet);
+                        free(new_job);
+                        break;
+
+                    } else {
+                        // File does not exist
+                    }
+
             }
 
         }
