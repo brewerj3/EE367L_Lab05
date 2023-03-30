@@ -335,6 +335,46 @@ void create_node_list() {
         p->next = g_node_list;
         g_node_list = p;
     }
+    
+    //New stuff - Jason
+    //Create SwitchNode structs for switch nodes
+        for (p_node = g_net_node; p_node < g_net_node + g_net_node_num; p_node++) {
+                if (p_node->type == SWITCH) {
+                        struct SwitchNode *node = malloc(sizeof(struct SwitchNode));
+                        node->type = SWITCH;
+                        node->id = p_node->id;
+                        node->ports = NULL;
+
+                        if (g_node_list == NULL) {
+                                g_node_list = p_node;
+                                p_node->next = NULL;
+                        }
+                        else {
+                                p_node->next = g_node_list;
+                                g_node_list = p_node;
+                        }
+                }
+        }
+
+        //Create HostNode structs for host nodes
+        for (p_node = g_net_node; p_node < g_net_node + g_net_node_num; p_node++) {
+                if (p_node->type == HOST) {
+                        struct HostNode *node = malloc(sizeof(struct HostNode));
+                        node->type = HOST;
+                        node->id = p_node->id;
+                        node->dir = NULL;
+
+                        if (g_node_list == NULL) {
+                                g_node_list = p_node;
+                                p_node->next = NULL;
+                        }
+                        else{
+                                p_node->next = g_node_list;
+                                g_node_list = p_node;
+                        }
+                }
+
+        }
 
 }
 
