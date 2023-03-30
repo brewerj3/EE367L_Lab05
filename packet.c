@@ -9,7 +9,6 @@
 #include "net.h"
 #include "host.h"
 
-//#define DEBUG
 
 // This sends the packet to the net_port.
 void packet_send(struct net_port *port, struct packet *p) {
@@ -28,14 +27,6 @@ void packet_send(struct net_port *port, struct packet *p) {
             msg[i + 4] = p->payload[i];
         }
 
-#ifdef DEBUG    // This is intended to print out the contents of the packet being sent when DEBUG is active
-        printf("Packet being sent")
-        printf("PACKET SEND, src=%d dst=%d p-src=%d p-dst=%d\n",
-              (int) msg[0],
-              (int) msg[1],
-              (int) p->src,
-              (int) p->dst);
-#endif
         // This actually sends the packet
         write(port->pipe_send_fd, msg, p->length + 4);
     }
@@ -59,14 +50,6 @@ int packet_recv(struct net_port *port, struct packet *p) {
             for (i = 0; i < p->length; i++) {   // This puts the payload from the message into the packet
                 p->payload[i] = msg[i + 4];
             }
-
-#ifdef DEBUG // This is intended to print out the contents of the packet being received when DEBUG is active
-  printf("PACKET RECV, src=%d dst=%d p-src=%d p-dst=%d\n",
-              (int) msg[0],
-              (int) msg[1],
-              (int) p->src,
-              (int) p->dst);
-#endif
         }
     }
 

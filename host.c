@@ -507,7 +507,7 @@ _Noreturn void host_main(int host_id) {
                         name[n] = '\0';
                         fp = fopen(name, "r");
                         if (fp != NULL) {
-                            printf("Successfully opened file named: %s\n",name);
+                            printf("Successfully opened file named: %s\n", name);
                             /*
                              * Create first packet which
                              * has the file name
@@ -599,7 +599,7 @@ _Noreturn void host_main(int host_id) {
                         } else {
                             /* Didn't open file */
                             // Make this do something
-                            printf("Failed to open file named: %s\n",name);
+                            printf("Failed to open file named: %s\n", name);
                         }
                     }
                     break;
