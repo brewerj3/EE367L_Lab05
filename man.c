@@ -153,7 +153,7 @@ void set_host_dir(struct man_port_at_man *curr_host) {
  *    The message starrts with 'p' followed by the id
  *    of the host to ping.
  *
- * Wiat for a reply
+ * Wait for a reply
  */
 
 void ping(struct man_port_at_man *curr_host) {
