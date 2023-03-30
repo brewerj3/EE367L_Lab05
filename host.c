@@ -416,6 +416,8 @@ _Noreturn void host_main(int host_id) {
                             new_job->fname_upload[i] = in_packet->payload[i];
                         }
                         new_job->fname_upload[i] = '\0';
+                        printf("name of file to upload = %s\n",new_job->fname_upload);
+                        printf("name of dir: %s\n",dir);
                         new_job->file_upload_dst = (int) in_packet->src;
                         job_q_add(&job_q, new_job);
                         break;
@@ -507,13 +509,13 @@ _Noreturn void host_main(int host_id) {
                         name[n] = '\0';
                         fp = fopen(name, "r");
                         if (fp != NULL) {
-
+                            printf("Successfully opened file named: %s\n",name);
                             /*
                              * Create first packet which
                              * has the file name
                              */
                             new_packet = (struct packet *) malloc(sizeof(struct packet));
-                            new_packet->dst = new_job->file_upload_dst;
+                            new_packet->dst = (char) new_job->file_upload_dst;
                             new_packet->src = (char) host_id;
                             new_packet->type = PKT_FILE_UPLOAD_START;
                             for (i = 0; new_job->fname_upload[i] != '\0'; i++) {
@@ -599,6 +601,7 @@ _Noreturn void host_main(int host_id) {
                         } else {
                             /* Didn't open file */
                             // Make this do something
+                            printf("Failed to open file named: %s\n",name);
                         }
                     }
                     break;
@@ -683,8 +686,8 @@ _Noreturn void host_main(int host_id) {
                              * has the file name
                              */
                             new_packet = (struct packet *) malloc(sizeof(struct packet));
-                            new_packet->src = new_job->file_upload_dst;
-                            new_packet->dst = (char) host_id;
+                            new_packet->src = (char) host_id;
+                            new_packet->dst = (char) new_job->file_upload_dst;
                             new_packet->type = PKT_FILE_UPLOAD_START;
                             for (i = 0; new_job->fname_download[i] != '\0'; i++) {
                                 new_packet->payload[i] = new_job->fname_download[i];

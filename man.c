@@ -221,7 +221,7 @@ int file_download(struct man_port_at_man *curr_host) {
     scanf("%d", &host_id);
     printf("\n");
 
-    n = sprintf(msg, "u %d %s", host_id, name);
+    n = sprintf(msg, "d %d %s", host_id, name);
     write(curr_host->send_fd, msg, n);
     usleep(TENMILLISEC);
 }
