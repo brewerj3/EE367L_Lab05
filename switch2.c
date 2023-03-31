@@ -12,6 +12,10 @@
 #include "host.h"
 #include "packet.h"
 
+void addEntryLookupTable(struct packet *in_packet) {
+
+}
+
 // Job queue operations
 _Noreturn void switch_main(int host_id) {
     // State
@@ -52,7 +56,11 @@ _Noreturn void switch_main(int host_id) {
     }
 
     // Need to initialize the lookup table
-
+    struct Table *lookupTable = (struct Table *) malloc(sizeof(struct Table));
+    //Fill out the isValid enum
+    for(i = 0; i < MAX_LOOKUP_TABLE_SIZE; i++) {
+        lookupTable->isValid[i] = False;
+    }
 
     // Initialize the job queue
     job_q_init(&job_q);
@@ -65,10 +73,37 @@ _Noreturn void switch_main(int host_id) {
             n = packet_recv(node_port[k], in_packet);
 
             if(n > 0) {     // If n > 0 there is a packet to process
+
                 // Create a new job to handle the packet
                 new_job = (struct host_job *) malloc(sizeof(struct host_job));
                 new_job->in_port_index = k;
                 new_job->packet = in_packet;
+
+                // Check lookup table for the port dst;
+                if(lookupTable->isValid[ (int) in_packet->dst] != False) {
+                    // The lookup table already contains the port to forward to
+                    new_job->type = JOB_FORWARD_PACKET;
+                    if(lookupTable->isValid[ (int) in_packet->src]) {
+                        int location = (int) in_packet->src;
+                        // Add the port to the lookup table
+                        lookupTable->isValid[location] = True;
+                        lookupTable->destination[location] = location;
+                        lookupTable->portNumber[location] = k;
+                    }
+                    job_q_add(&job_q, new_job);
+                } else if(lookupTable->isValid[ (int) in_packet->dst] == False) {
+                    // The lookup table does not contain the port to forward to
+                    new_job->type = JOB_SEND_PKT_ALL_PORTS;
+                }
+
+            } else {
+                free(in_packet);
+            }   // Finished with in_packets
+
+            // Execute one job in the job queue
+
+            if(job_q_num(&job_q) > 0) {
+
             }
         }
     }

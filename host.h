@@ -11,7 +11,8 @@ enum host_job_type {
     JOB_FILE_UPLOAD_SEND,
     JOB_FILE_UPLOAD_RECV_START,
     JOB_FILE_UPLOAD_RECV_END,
-    JOB_FILE_UPLOAD_RECV_MIDDLE
+    JOB_FILE_UPLOAD_RECV_MIDDLE,
+    JOB_FORWARD_PACKET
 };
 
 struct host_job {
@@ -34,5 +35,7 @@ struct job_queue {
 };
 
 void job_q_init(struct job_queue *j_q);
+
+void job_q_add(struct job_queue *j_q, struct host_job *j);
 
 _Noreturn void host_main(int host_id);
