@@ -33,4 +33,6 @@ struct job_queue {
     int occ;
 };
 
+void job_q_init(struct job_queue *j_q);
+
 _Noreturn void host_main(int host_id);

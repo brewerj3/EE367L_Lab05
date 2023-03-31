@@ -226,7 +226,6 @@ _Noreturn void host_main(int host_id) {
     struct net_port *p;
     struct host_job *new_job;
     struct host_job *new_job2;
-    struct host_job *new_job3;
 
     struct job_queue job_q;
 
