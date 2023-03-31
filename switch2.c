@@ -94,6 +94,15 @@ _Noreturn void switch_main(int host_id) {
                 } else if(lookupTable->isValid[ (int) in_packet->dst] == False) {
                     // The lookup table does not contain the port to forward to
                     new_job->type = JOB_SEND_PKT_ALL_PORTS;
+
+                    // Check if a port can be added to the lookup table
+                    if(lookupTable->isValid[ (int) in_packet->src] == False) {
+                        int location = (int) in_packet->src;
+                        // Add the port to the lookup table
+                        lookupTable->isValid[location] = True;
+                        lookupTable->destination[location] = location;
+                        lookupTable->portNumber[location] = k;
+                    }
                 }
 
             } else {
@@ -104,6 +113,16 @@ _Noreturn void switch_main(int host_id) {
 
             if(job_q_num(&job_q) > 0) {
 
+                // Get a new job from the job queue
+                new_job = job_q_remove(&job_q);
+
+                // Send packets
+                switch(new_job->type) {
+                    case JOB_SEND_PKT_ALL_PORTS:
+
+                        break;
+                    case JOB_FORWARD_PACKET:
+                }
             }
         }
     }
