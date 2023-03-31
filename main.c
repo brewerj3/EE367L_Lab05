@@ -43,6 +43,8 @@ void main() {
                 host_main(p_node->id);
             } else if (p_node->type = SWITCH) {
                 /* Execute switch routine, which you have to write */
+                //switch_init(p_node -> id); //Initilize switch
+                //switch_main(p_node -> id); //Execute switch routine
             }
             return;
         }
