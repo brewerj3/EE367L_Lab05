@@ -42,11 +42,11 @@ enum bool {
  * network configuration file is loaded.
  */
 
-struct net_link {
+/* struct net_link {
     enum NetLinkType type;
     int pipe_node0;
     int pipe_node1;
-};
+}; */
 
 
 /*
@@ -435,7 +435,13 @@ int load_net_data_file() {
                 fscanf(fp, " %d ", &node_id);
                 g_net_node[i].type = HOST;
                 g_net_node[i].id = node_id;
-            } else {
+            }
+            else if(node_type = 'S'){
+                fscanf(fp, " %d ", &node_id);
+                g_net_node[i].type = SWITCH;
+                g_net_node[i].id = node_id;
+            }
+            else {
                 printf(" net.c: Unidentified Node Type\n");
             }
 
@@ -479,7 +485,6 @@ int load_net_data_file() {
             } else {
                 printf("   net.c: Unidentified link type\n");
             }
-
         }
     }
 
