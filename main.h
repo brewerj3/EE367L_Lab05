@@ -16,9 +16,9 @@ struct net_node { /* Network node, e.g., host or switch */
     enum NetNodeType type;
     int id;
     struct net_node *next;
-    int pipe_in;
-    int num_links;
-    struct net_link **link;
+    //int pipe_in;
+    //int num_links;
+    //struct net_link **link;
 };
 
 struct net_port { /* port to communicate with another node */
@@ -29,18 +29,16 @@ struct net_port { /* port to communicate with another node */
     struct net_port *next;
 };
 
-struct net_link {
-    enum NetLinkType type;
-    int pipe_node0;
-    int pipe_node1;
-    int node1;
-    int node2;
-    struct net_port *port1;
-    struct net_port *port2;
-    struct net_link *next;
-};
+/* struct net_link {
+        int node1;
+        int node2;
+        struct net_port *port1;
+        struct net_port *port2;
+        struct net_link *next;
+}; */
 
 /* Packet sent between nodes  */
+
 struct packet { /* struct for a packet */
     char src;
     char dst;
@@ -50,6 +48,7 @@ struct packet { /* struct for a packet */
 };
 
 /* Types of packets */
+
 #define PKT_PING_REQ            0
 #define PKT_PING_REPLY          1
 #define PKT_FILE_UPLOAD_START   2
@@ -60,17 +59,17 @@ struct packet { /* struct for a packet */
 
 /* Data structure to represent switch nodes */
 /* struct switch_node {
-    int id;
-    int num_links;
-    struct net_link *links;
-    struct switch_node *next;
-}; */
+        int id;
+        int num_links;
+        struct net_link *links;
+        struct switch_node *next;
+};*/
 
 /* Data structure to represent links between switch nodes */
 /* struct switch_link {
-    int node1;
-    int node2;
-    int pipe_node1;
-    int pipe_node2;
-    struct switch_link *next;
+        int node1;
+        int node2;
+        int pipe_node1;
+        int pipe_node2;
+        struct switch_link *next;
 }; */

@@ -8,8 +8,7 @@ add_executable(net367
         man.c man.h
         packet.c packet.h
         host.c host.h
-        net.c net.h
-        switch.c switch.h)
+        net.c net.h)
 
 file(COPY p2p.config DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY LabSwitch DESTINATION ${CMAKE_BINARY_DIR})
