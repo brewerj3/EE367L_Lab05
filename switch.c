@@ -15,7 +15,7 @@
 #define NUM_NODES 1
 
 //Initialize the switch node
-struct net_node **switch_init(int id){
+void switch_init(int id){
     printf("Initializing switch %d...\n", id);
 
     // Allocate memory for NUM_NODES network nodes
@@ -28,20 +28,16 @@ struct net_node **switch_init(int id){
         g_net_node[i]->id = 0;
         g_net_node[i]->next = NULL;
         g_net_node[i]->pipe_in = -1;
-        g_net_node[i]->num_links = 0;
+        g_net_node[0]->num_links = 0;
     }
     // Allocate memory for g_net_node[0]'s network links
     g_net_node[0]->link = (struct net_link **) malloc(sizeof(struct net_link *) * g_net_node[0]->num_links);
 
     // Initialize g_net_node[0]'s network links
     g_net_node[0]->link[0] = ; //It has to equal some network link?
-
-    return g_net_node;
 }
 
 void switch_main(int id){
-    struct net_node **g_net_node = switch_init(id);
-
     switch_init(id);
     printf("Starting switch %d...\n", id);
 
@@ -85,6 +81,4 @@ void switch_main(int id){
         close(pipe_out);
     }
     printf("Exiting switch %d...\n", id);
-
-    free(g_net_node);
 }
