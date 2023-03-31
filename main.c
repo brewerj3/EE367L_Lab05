@@ -11,7 +11,7 @@
 #include "net.h"
 #include "man.h"
 #include "host.h"
-//Test
+#include "switch2.h"
 
 void main() {
 
@@ -41,10 +41,9 @@ void main() {
         } else if (pid == 0) { /* The child process, which is a node  */
             if (p_node->type == HOST) {  /* Execute host routine */
                 host_main(p_node->id);
-            } else if (p_node->type = SWITCH) {
+            } else if (p_node->type == SWITCH) {
                 /* Execute switch routine, which you have to write */
-                //switch_init(p_node -> id); //Initilize switch
-                //switch_main(p_node -> id); //Execute switch routine
+                switch_main(p_node->id);
             }
             return;
         }

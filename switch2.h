@@ -13,5 +13,6 @@ struct Table {
     int portNumber[MAX_LOOKUP_TABLE_SIZE];
 };
 
+_Noreturn void switch_main(int host_id);
 
 #endif
