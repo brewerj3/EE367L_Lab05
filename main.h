@@ -16,6 +16,9 @@ struct net_node { /* Network node, e.g., host or switch */
     enum NetNodeType type;
     int id;
     struct net_node *next;
+    //int pipe_in;
+    //int num_links;
+    //struct net_link **link;
 };
 
 struct net_port { /* port to communicate with another node */
@@ -25,6 +28,14 @@ struct net_port { /* port to communicate with another node */
     int pipe_recv_fd;
     struct net_port *next;
 };
+
+/* struct net_link {
+        int node1;
+        int node2;
+        struct net_port *port1;
+        struct net_port *port2;
+        struct net_link *next;
+}; */
 
 /* Packet sent between nodes  */
 
@@ -46,4 +57,19 @@ struct packet { /* struct for a packet */
 #define PKT_FILE_UPLOAD_MIDDLE  4
 #define PKT_FILE_DOWNLOAD_REQ   5
 
+/* Data structure to represent switch nodes */
+/* struct switch_node {
+        int id;
+        int num_links;
+        struct net_link *links;
+        struct switch_node *next;
+};*/
 
+/* Data structure to represent links between switch nodes */
+/* struct switch_link {
+        int node1;
+        int node2;
+        int pipe_node1;
+        int pipe_node2;
+        struct switch_link *next;
+}; */
