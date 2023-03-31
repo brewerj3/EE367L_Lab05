@@ -53,6 +53,7 @@ _Noreturn void switch_main(int host_id) {
 
     // Need to initialize the lookup table
 
+
     // Initialize the job queue
     job_q_init(&job_q);
 
