@@ -67,7 +67,9 @@ _Noreturn void switch_main(int host_id) {
 
     while(1) {
         // No need to get commands from the manager
-        for( k = 0; k < node_port_num; k++) {   // Scan all ports
+
+        // Scan all ports
+        for( k = 0; k < node_port_num; k++) {
 
             in_packet = (struct packet *) malloc(sizeof(struct packet));
             n = packet_recv(node_port[k], in_packet);
@@ -80,106 +82,63 @@ _Noreturn void switch_main(int host_id) {
                 new_job->packet = in_packet;
 
                 // Check lookup table for the port dst;
-                if(lookupTable->isValid[ (int) in_packet->dst] != False) {
+                if(lookupTable->isValid[ (int) in_packet->dst] == True) {
                     // The lookup table already contains the port to forward to
                     new_job->type = JOB_FORWARD_PACKET;
-                    if(lookupTable->isValid[ (int) in_packet->src]) {
-                        int location = (int) in_packet->src;
-                        // Add the port to the lookup table
-                        lookupTable->isValid[location] = True;
-                        lookupTable->destination[location] = location;
-                        lookupTable->portNumber[location] = k;
-                    }
-                    job_q_add(&job_q, new_job);
+                    new_job->out_port_index = lookupTable->portNumber[in_packet->dst];
                 } else if(lookupTable->isValid[ (int) in_packet->dst] == False) {
                     // The lookup table does not contain the port to forward to
                     new_job->type = JOB_SEND_PKT_ALL_PORTS;
-
-                    // Check if a port can be added to the lookup table
-                    if(lookupTable->isValid[ (int) in_packet->src] == False) {
-                        int location = (int) in_packet->src;
-                        // Add the port to the lookup table
-                        lookupTable->isValid[location] = True;
-                        lookupTable->destination[location] = location;
-                        lookupTable->portNumber[location] = k;
-                    }
                 }
+
+                // Check if a port can be added to the lookup table
+                if(lookupTable->isValid[ (int) in_packet->src] == False) {
+                    int location = (int) in_packet->src;
+                    // Add the port to the lookup table
+                    lookupTable->isValid[location] = True;
+                    lookupTable->destination[location] = location;
+                    lookupTable->portNumber[location] = new_job->in_port_index;
+                }
+                job_q_add(&job_q, new_job);
 
             } else {
                 free(in_packet);
             }   // Finished with in_packets
 
-            // Execute one job in the job queue
+        }
 
-            if(job_q_num(&job_q) > 0) {
+        // Execute one job in the job queue
+        if(job_q_num(&job_q) > 0) {
 
-                // Get a new job from the job queue
-                new_job = job_q_remove(&job_q);
+            // Get a new job from the job queue
+            new_job = job_q_remove(&job_q);
 
-                // Send packets
-                switch(new_job->type) {
-                    case JOB_SEND_PKT_ALL_PORTS:
+            // Send packets
+            switch(new_job->type) {
+                // Send the packet on all ports
+                case JOB_SEND_PKT_ALL_PORTS:
+                    for (k = 0; k < node_port_num; k++ ) {
+                        if(k == (int) new_job->packet->src) {
+                            continue;
+                        }
+                        packet_send(node_port[k], new_job->packet);
+                    }
+                    free(new_job->packet);
+                    free(new_job);
+                    break;
 
-                        break;
-                    case JOB_FORWARD_PACKET:
-                }
+                    // Send the packet to one specific port
+                case JOB_FORWARD_PACKET:
+                    packet_send(node_port[new_job->out_port_index], new_job->packet);
+                    free(new_job->packet);
+                    free(new_job);
+                    break;
             }
         }
+
+        // Go to sleep for 10 ms
+        usleep(TENMILLISEC);
     }
 
 
 }
-
-//Initialize the switch node
-
-
-/*void switch_init(int id){
-        printf("Initializing switch %d...\n", id);
-}
-
-void switch_main(int id){
-        printf("Starting switch %d...\n", id);
-
-        char buf[MAX_BUF_SIZE];
-        int nbytes;
-
-        //Read from the switch's input pipe, and write to all output pipes
-        while ((nbytes = read(g_net_node[id] -> pipe_in, buf, MAX_BUF_SIZE)) > 0) {
-                for (int i = 0; i < g_net_node[id] -> num_links; i++) {
-                        int pipe_out;
-                        if (g_net_node[id] -> link[i] -> node1 == id) {
-                                //Output port is node2's input port
-                                pipe_out = g_net_node[g_net_node[id] -> link[i] -> node2] -> pipe_in;
-                        }
-                        else if (g_net_node[id] -> link[i] -> node2 == id) {
-                                //Output port is node1's input port
-                                pipe_out = g_net_node[g_net_node[id] -> link[i] -> node1] -> pipe_in;
-                        }
-                        else {
-                                //Link is not connected to this switch, skip
-                                continue;
-                        }
-                        //Write the data to the output port
-                        write(pipe_out, buf, nbytes);
-                }
-        }
-
-        //Close the switch's input pipe and all output pipes
-        close(g_net_node[id] -> pipe_in);
-        for (int i = 0; i < g_net_node[id] -> num_links; i++) {
-                int pipe_out;
-                if (g_net_node[id] -> link[i] -> node1 == id) {
-                        pipe_out = g_net_node[g_net_node[id] -> link[i] -> node2] -> pipe_in;
-                }
-                else if (g_net_node[id] -> link[i] -> node2 == id) {
-                        pipe_out = g_net_node[g_net_node[id] -> link[i] -> node1] -> pipe_in;
-                }
-                else {
-                        continue;
-                }
-                close(pipe_out);
-        }
-
-        printf("Exiting switch %d...\n", id);
-}
-*/

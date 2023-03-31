@@ -2,6 +2,8 @@
  * host.h
  */
 
+#define TENMILLISEC 10000   /* 10 millisecond sleep */
+
 // Added JOB_FILE_UPLOAD_MIDDLE
 enum host_job_type {
     JOB_SEND_PKT_ALL_PORTS,
