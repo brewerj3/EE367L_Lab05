@@ -13,3 +13,4 @@ add_executable(net367
 
 file(COPY p2p.config DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY LabSwitch DESTINATION ${CMAKE_BINARY_DIR})
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")

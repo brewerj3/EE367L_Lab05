@@ -481,6 +481,7 @@ int load_net_data_file() {
                 g_net_link[i].pipe_node0 = node0;
                 g_net_link[i].pipe_node1 = node1;
             } else {
+                // For implementing sockets eventually
                 printf("   net.c: Unidentified link type\n");
             }
 
