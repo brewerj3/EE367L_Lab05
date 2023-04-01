@@ -80,13 +80,13 @@ _Noreturn void switch_main(int host_id) {
                 new_job = (struct host_job *) malloc(sizeof(struct host_job));
                 new_job->in_port_index = k;
                 new_job->packet = in_packet;
-
+                dst = (int) in_packet->dst;
                 // Check lookup table for the port dst;
-                if(lookupTable->isValid[ (int) in_packet->dst] == True) {
+                if(lookupTable->isValid[dst] == True) {
                     // The lookup table already contains the port to forward to
                     new_job->type = JOB_FORWARD_PACKET;
-                    new_job->out_port_index = lookupTable->portNumber[in_packet->dst];
-                } else if(lookupTable->isValid[ (int) in_packet->dst] == False) {
+                    new_job->out_port_index = lookupTable->portNumber[dst];
+                } else if(lookupTable->isValid[dst] == False) {
                     // The lookup table does not contain the port to forward to
                     new_job->type = JOB_SEND_PKT_ALL_PORTS;
                 }

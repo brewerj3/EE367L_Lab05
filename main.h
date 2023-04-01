@@ -56,20 +56,3 @@ struct packet { /* struct for a packet */
 // Added
 #define PKT_FILE_UPLOAD_MIDDLE  4
 #define PKT_FILE_DOWNLOAD_REQ   5
-
-/* Data structure to represent switch nodes */
-/* struct switch_node {
-        int id;
-        int num_links;
-        struct net_link *links;
-        struct switch_node *next;
-};*/
-
-/* Data structure to represent links between switch nodes */
-/* struct switch_link {
-        int node1;
-        int node2;
-        int pipe_node1;
-        int pipe_node2;
-        struct switch_link *next;
-}; */
