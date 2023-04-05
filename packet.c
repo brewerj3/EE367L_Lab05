@@ -29,6 +29,8 @@ void packet_send(struct net_port *port, struct packet *p) {
 
         // This actually sends the packet
         write(port->pipe_send_fd, msg, p->length + 4);
+    } else if(port->type == SOCKET) {
+        // Do socket stuff
     }
 
 }
@@ -51,6 +53,8 @@ int packet_recv(struct net_port *port, struct packet *p) {
                 p->payload[i] = msg[i + 4];
             }
         }
+    } else if(port->type == SOCKET) {
+        // Do socket stuff
     }
 
     // Return the read error code

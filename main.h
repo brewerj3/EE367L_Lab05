@@ -29,14 +29,6 @@ struct net_port { /* port to communicate with another node */
     struct net_port *next;
 };
 
-/* struct net_link {
-        int node1;
-        int node2;
-        struct net_port *port1;
-        struct net_port *port2;
-        struct net_link *next;
-}; */
-
 /* Packet sent between nodes  */
 
 struct packet { /* struct for a packet */

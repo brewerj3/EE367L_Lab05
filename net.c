@@ -480,6 +480,11 @@ int load_net_data_file() {
                 g_net_link[i].type = PIPE;
                 g_net_link[i].pipe_node0 = node0;
                 g_net_link[i].pipe_node1 = node1;
+            } else if(link_type == 'S') {
+                fscanf(fp, " %d %d ", &node0, &node1);
+                g_net_link[i].type = SOCKET;
+                g_net_link[i].pipe_node0 = node0;
+                g_net_link[i].pipe_node1 = node1;
             } else {
                 // For implementing sockets eventually
                 printf("   net.c: Unidentified link type\n");
