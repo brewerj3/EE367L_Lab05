@@ -44,7 +44,7 @@ void packet_send(struct net_port *port, struct packet *p) {
         }
 
         // Send the packet
-        send(port->recvSockfd, msg, p->length + 4, 0);
+        write(port->sendSockfd, msg, p->length + 4);
     }
 
 }
@@ -69,6 +69,16 @@ int packet_recv(struct net_port *port, struct packet *p) {
         }
     } else if(port->type == SOCKET) {
         // @TODO Do socket stuff
+        n = read(port->recvSockfd, msg, PAYLOAD_MAX + 4);
+        if(n > 0) {
+            p->src = (char) msg[0];             // The host id of the source
+            p->dst = (char) msg[1];             // The host id of the intended destination of the packet
+            p->type = (char) msg[2];            // The type of packet
+            p->length = (int) msg[3];           // The length of the packet
+            for (i = 0; i < p->length; i++) {   // This puts the payload from the message into the packet
+                p->payload[i] = msg[i + 4];
+            }
+        }
     }
 
     // Return the read error code
