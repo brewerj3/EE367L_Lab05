@@ -31,6 +31,7 @@ void packet_send(struct net_port *port, struct packet *p) {
         write(port->pipe_send_fd, msg, p->length + 4);
     } else if(port->type == SOCKET) {
         // @TODO Do socket stuff
+
     }
 
 }

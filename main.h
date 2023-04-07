@@ -16,9 +16,6 @@ struct net_node { /* Network node, e.g., host or switch */
     enum NetNodeType type;
     int id;
     struct net_node *next;
-    //int pipe_in;
-    //int num_links;
-    //struct net_link **link;
 };
 
 struct net_port { /* port to communicate with another node */
@@ -26,6 +23,8 @@ struct net_port { /* port to communicate with another node */
     int pipe_host_id;
     int pipe_send_fd;
     int pipe_recv_fd;
+    int TCP_port_send;
+    int TCP_port_recv;
     struct net_port *next;
 };
 

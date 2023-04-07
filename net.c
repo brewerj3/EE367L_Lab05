@@ -21,6 +21,8 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#include <netdb.h>
+#include <signal.h>
 
 #include "main.h"
 #include "man.h"
@@ -46,6 +48,10 @@ struct net_link {
     enum NetLinkType type;
     int pipe_node0;
     int pipe_node1;
+    int tcp_socket_send;
+    int tcp_socket_recv;
+    char myDomain[NAME_LENGTH];
+    char connectedDomain[NAME_LENGTH];
 };
 
 
@@ -128,7 +134,7 @@ struct net_node *net_get_node_list();
 
 
 /*
- * Remove all the ports for the host from linked lisst g_port_list.
+ * Remove all the ports for the host from linked list g_port_list.
  * and create another linked list.  Return the pointer to this
  * linked list.
  */
@@ -317,6 +323,8 @@ void create_man_ports(struct man_port_at_man **p_man, struct man_port_at_host **
 
             p_h->next = *p_host;
             *p_host = p_h;
+        } else if (p->type == SOCKET) {
+            // @TODO make this work
         }
     }
 
@@ -337,6 +345,7 @@ void create_node_list() {
     }
 
 }
+
 
 /*
  * Create links, each with either a pipe or socket.
@@ -382,6 +391,13 @@ void create_port_list() {
             p0->next = p1; /* Insert ports in linked lisst */
             p1->next = g_port_list;
             g_port_list = p0;
+
+        } else if (g_net_link[i].type == SOCKET) {
+            struct addrinfo hints, s0, s1;
+            struct sockaddr_storage their_addr;
+            socklen_t sin_size;
+            struct sigaction sa;
+            char s[INET6_ADDRSTRLEN];
 
         }
     }
@@ -462,6 +478,8 @@ int load_net_data_file() {
     int link_num;
     char link_type;
     int node0, node1;
+    char *domain0, *domain1;
+    int port0, port1;
 
     fscanf(fp, " %d ", &link_num);
     printf("Number of links = %d\n", link_num);
@@ -475,16 +493,21 @@ int load_net_data_file() {
         g_net_link = (struct net_link *) malloc(sizeof(struct net_link) * link_num);
         for (i = 0; i < link_num; i++) {
             fscanf(fp, " %c ", &link_type);
-            if (link_type == 'P') {
+            if (link_type == 'P') { // Create a pipe
                 fscanf(fp, " %d %d ", &node0, &node1);
                 g_net_link[i].type = PIPE;
                 g_net_link[i].pipe_node0 = node0;
                 g_net_link[i].pipe_node1 = node1;
-            } else if(link_type == 'S') {
-                fscanf(fp, " %d %d ", &node0, &node1);
+            } else if(link_type == 'S') {   // Create a socket
+                fscanf(fp, " %d %s %d %s %d", &node0, domain0, &port0, domain1, &port1);
                 g_net_link[i].type = SOCKET;
-                g_net_link[i].pipe_node0 = node0;
-                g_net_link[i].pipe_node1 = node1;
+                g_net_link[i].tcp_socket_recv = node0;  // Socket to listen to
+                g_net_link[i].tcp_socket_send = node1;  // Socket to send to
+                for(int k = 0; k < NAME_LENGTH; k++) {
+                    g_net_link[i].myDomain[k] = domain0[k];         // Domain to listen on
+                    g_net_link[i].connectedDomain[k] = domain1[k];  // Domain to send to
+                }
+
             } else {
                 // For implementing sockets eventually
                 printf("   net.c: Unidentified link type\n");
