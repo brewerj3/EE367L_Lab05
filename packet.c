@@ -43,9 +43,8 @@ void packet_send(struct net_port *port, struct packet *p) {
             msg[i + 4] = p->payload[i];
         }
 
-        if (msg != NULL) {
-            send(port->TCP_port_recv, msg, strlen(msg), 0);
-        }
+        // Send the packet
+        send(port->recvSockfd, msg, p->length + 4, 0);
     }
 
 }

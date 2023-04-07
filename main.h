@@ -8,7 +8,7 @@ enum NetNodeType { /* Types of network nodes */
     HOST, SWITCH
 };
 
-enum NetLinkType { /* Types of linkls */
+enum NetLinkType { /* Types of links */
     PIPE, SOCKET
 };
 
@@ -23,8 +23,8 @@ struct net_port { /* port to communicate with another node */
     int pipe_host_id;
     int pipe_send_fd;
     int pipe_recv_fd;
-    int TCP_port_send;
-    int TCP_port_recv;
+    int sendSockfd;
+    int recvSockfd;
     struct net_port *next;
 };
 
