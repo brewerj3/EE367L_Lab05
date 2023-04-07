@@ -54,6 +54,7 @@ struct net_link {
     char tcp_socket_recv[NAME_LENGTH];
     char myDomain[NAME_LENGTH];
     char connectedDomain[NAME_LENGTH];
+    int sockfd;
 };
 
 
@@ -345,6 +346,7 @@ void create_node_list() {
     }
 
 }
+
 void sigchld_handler(int s) {
     (void) s; // quiet unused variable warning
 
@@ -403,7 +405,7 @@ void create_port_list() {
 
         } else if (g_net_link[i].type == SOCKET) {
             // @TODO make this work
-            int sockfd, new_fd, numbytes;  // listen on sock_fd, new connection on new_fd
+            int sockfd, sending_fd, numbytes;  // listen on sock_fd, send on sending_fd
             struct addrinfo hints, *servinfo, *p;
             struct sockaddr_storage their_addr; // connector's address information
             socklen_t sin_size;
@@ -444,7 +446,7 @@ void create_port_list() {
             }
             freeaddrinfo(servinfo); // all done with this structure
 
-            if (p == NULL) {
+            if (p != NULL) {
                 fprintf(stderr, "server: failed to bind\n");
                 exit(1);
             }
@@ -461,9 +463,16 @@ void create_port_list() {
                 perror("sigaction");
                 exit(1);
             }
+            p0 = (struct net_port *) malloc(sizeof(struct net_port));
+            p0->type = SOCKET;
+            p0->TCP_port_recv = sockfd;
+
+            p0->next = g_port_list; /* Insert port in linked list */
+            g_port_list = p0;
+
+        }
 
     }
-
 }
 
 /*

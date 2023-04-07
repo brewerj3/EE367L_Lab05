@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <string.h>
 
 #include "main.h"
 #include "packet.h"
@@ -31,7 +33,19 @@ void packet_send(struct net_port *port, struct packet *p) {
         write(port->pipe_send_fd, msg, p->length + 4);
     } else if(port->type == SOCKET) {
         // @TODO Do socket stuff
+        msg[0] = (char) p->src;     // The source of the packet being sent, (the host id)
+        msg[1] = (char) p->dst;     // The destination of the packet being sent
+        msg[2] = (char) p->type;    // The type of packet being sent
+        msg[3] = (char) p->length;  // The length of the packet being sent
 
+        // This adds the payload to the rest of the packet
+        for (i = 0; i < p->length; i++) {
+            msg[i + 4] = p->payload[i];
+        }
+
+        if (msg != NULL) {
+            send(port->TCP_port_recv, msg, strlen(msg), 0);
+        }
     }
 
 }
