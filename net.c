@@ -360,7 +360,7 @@ void sigchld_handler(int s) {
 
 /*
  * Create links, each with either a pipe or socket.
- * It uses private global varaibles g_net_link[] and g_net_link_num
+ * It uses private global variables g_net_link[] and g_net_link_num
  */
 void create_port_list() {
     struct net_port *p0;
@@ -468,26 +468,27 @@ void create_port_list() {
             p0->recvSockfd = recv_fd;
 
             // Setup sending socket
-            memset(&hints2, 0, sizeof hints2);
+            /*memset(&hints2, 0, sizeof hints2);
             hints2.ai_family = AF_UNSPEC;
             hints2.ai_socktype = SOCK_STREAM;
 
             if((rv2 = getaddrinfo(g_net_link[i].sendingDomain, g_net_link[i].tcp_socket_send, &hints2, &servinfo2)) != 0) {
                 fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-                exit(1);
+                //exit(1);
             }
-            for(p2 = servinfo2; p != NULL; p = p->ai_next) {
-                if((sending_fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+            //accept()
+            for(p2 = servinfo2; p2 != NULL; p2 = p2->ai_next) {
+                if((sending_fd = socket(p2->ai_family, p2->ai_socktype, p2->ai_protocol)) == -1) {
                     perror("client: socket");
                     continue;
                 }
-                if(connect(sending_fd, p->ai_addr, p->ai_addrlen) == -1) {
+                if(connect(sending_fd, p2->ai_addr, p2->ai_addrlen) == -1) {
                     perror("client: connect");
                     close(sending_fd);
                     continue;
                 }
                 break;
-            }
+            }*/
 
 
 
