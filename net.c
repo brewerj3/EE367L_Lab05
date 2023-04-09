@@ -405,8 +405,8 @@ void create_port_list() {
 
         } else if (g_net_link[i].type == SOCKET) {
             // @TODO make this work
-            int recv_fd, sending_fd, numbytes;  // listen on sock_fd, send on sending_fd
-            struct addrinfo hints, *servinfo, *p, hints2, *servinfo2, *p2;
+            int sockfd, new_fd, numbytes;  // listen on sock_fd, send on sending_fd
+            struct addrinfo hints, *servinfo, *p;
             struct sockaddr_storage their_addr; // connector's address information
             socklen_t sin_size;
             struct sigaction sa;
@@ -427,31 +427,39 @@ void create_port_list() {
             }
             // loop through all the results and bind to the first we can
             for (p = servinfo; p != NULL; p = p->ai_next) {
-                if ((recv_fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+                //Creating socket file descriptor
+                if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
                     perror("server: socket");
                     continue;
                 }
-
-                if (setsockopt(recv_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+                // Force attach socket to port
+                if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
                     perror("setsockopt");
                     exit(1);
                 }
 
-                if (bind(recv_fd, p->ai_addr, p->ai_addrlen) == -1) {
-                    close(recv_fd);
+                if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+                    close(sockfd);
                     perror("server: bind");
                     continue;
                 }
-
+                break;
             }
-            freeaddrinfo(servinfo); // all done with this structure
 
-            /*if (p == NULL) {
+            // Set as nonblocking
+            if (fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0) | O_NONBLOCK) == -1) {
+                perror("calling fcntl");
+            }
+
+            freeaddrinfo(servinfo); // All done with this structure
+
+            // Check if server failed to bind
+            if (p == NULL) {
                 fprintf(stderr, "server: failed to bind\n");
                 exit(1);
-            }*/
+            }
 
-            if (listen(recv_fd, 10) == -1) {
+            if (listen(sockfd, 10) == -1) {
                 perror("listen");
                 exit(1);
             }
@@ -465,7 +473,7 @@ void create_port_list() {
             }
             p0 = (struct net_port *) malloc(sizeof(struct net_port));
             p0->type = SOCKET;
-            p0->recvSockfd = recv_fd;
+            p0->recvSockfd = sockfd;
 
             // Setup sending socket
             /*memset(&hints2, 0, sizeof hints2);
@@ -595,10 +603,10 @@ int load_net_data_file() {
                 g_net_link[i].type = PIPE;
                 g_net_link[i].pipe_node0 = node0;
                 g_net_link[i].pipe_node1 = node1;
-            } else if(link_type == 'S') {   // Create a socket
+            } else if (link_type == 'S') {   // Create a socket
                 fscanf(fp, " %d %s %s %s %s", &node0, domain0, port0, domain1, port1);
                 g_net_link[i].type = SOCKET;
-                for(int k = 0; k < NAME_LENGTH; k++) {
+                for (int k = 0; k < NAME_LENGTH; k++) {
                     g_net_link[i].tcp_socket_recv[k] = port0[k];  // Socket to listen to
                     g_net_link[i].tcp_socket_send[k] = port1[k];  // Socket to send to
                     g_net_link[i].myDomain[k] = domain0[k];         // Domain to listen on
