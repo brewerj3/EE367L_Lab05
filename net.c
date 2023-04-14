@@ -470,24 +470,26 @@ void create_port_list() {
             // Create sendSockfd, a socket file descriptor to send to.
             memset(&hints2, 0, sizeof hints2);
             if((rv = getaddrinfo(g_net_link[i].sendingDomain, g_net_link[i].port_send, &hints2, &servinfo2)) != 0) {
+                printf("g_net_link[%i].sendingDomain = %s\n", i, g_net_link[i].sendingDomain);
                 fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
                 exit(1);
             }
+            p0 = (struct net_port *) malloc(sizeof(struct net_port));
             for(p = servinfo; p != NULL; p = p->ai_next) {
                 if((sending_sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
                     perror("sending: socket");
                     continue;
                 }
+                p0->socklength = p->ai_addrlen;                                 // length of addr to send to
+                p0->addr = p->ai_addr;                                          // addr to send to
                 break;
             }
 
-            p0 = (struct net_port *) malloc(sizeof(struct net_port));
+
             p0->type = g_net_link[i].type;
             p0->pipe_host_id = g_net_link[i].pipe_node0;
             p0->sendSockfd = sending_sockfd;                                // Socket file descriptor to send packets to
             p0->recvSockfd = listening_sockfd;                              // Socket file descriptor listening on
-            p0->socklength = p->ai_addrlen;                                 // length of addr to send to
-            p0->addr = p->ai_addr;                                          // addr to send to
             strcpy(p0->sendPortNumber, g_net_link[i].port_send);
             strcpy(p0->recvPortNumber, g_net_link[i].port_recv);
 
@@ -574,8 +576,7 @@ int load_net_data_file() {
     int link_num;
     char link_type;
     int node0, node1;
-    char *domain0, *domain1;
-    char *port0, *port1;
+    char port0[MAX_FILE_NAME], port1[MAX_FILE_NAME], domain0[MAX_FILE_NAME], domain1[MAX_FILE_NAME];
 
     fscanf(fp, " %d ", &link_num);
     printf("Number of links = %d\n", link_num);
@@ -602,14 +603,10 @@ int load_net_data_file() {
                 g_net_link[i].pipe_node0 = node0;
                 printf("starting for loop\n");
                 for (int k = 0; k < NAME_LENGTH; k++) {
-                    printf("loop start\n");
-                    g_net_link[i].port_recv[k] = port0[k];  // Port to listen to @TODO execution sigsegv at this point
-                    printf("port0\n");
+                    g_net_link[i].port_recv[k] = port0[k];  // Port to listen to
                     g_net_link[i].port_send[k] = port1[k];  // Port to send to
-                    printf("port1\n");
                     //g_net_link[i].myDomain[k] = domain0[k];         // Domain to listen on (not necessary)
                     g_net_link[i].sendingDomain[k] = domain1[k];  // Domain to send to
-                    printf("loop end\n");
                 }
                 printf("g_net_link[%i] is filled with information\n",i);
             } else {
