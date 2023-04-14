@@ -469,19 +469,23 @@ void create_port_list() {
 
             // Create sendSockfd, a socket file descriptor to send to.
             memset(&hints2, 0, sizeof hints2);
+            printf("g_net_link[%i].sendingDomain = %s\n", i, g_net_link[i].sendingDomain);
+
             if((rv = getaddrinfo(g_net_link[i].sendingDomain, g_net_link[i].port_send, &hints2, &servinfo2)) != 0) {
-                printf("g_net_link[%i].sendingDomain = %s\n", i, g_net_link[i].sendingDomain);
                 fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
                 exit(1);
             }
+
             p0 = (struct net_port *) malloc(sizeof(struct net_port));
-            for(p = servinfo; p != NULL; p = p->ai_next) {
+
+            for(p = servinfo2; p != NULL; p = p->ai_next) {
                 if((sending_sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
                     perror("sending: socket");
                     continue;
                 }
-                p0->socklength = p->ai_addrlen;                                 // length of addr to send to
-                p0->addr = p->ai_addr;                                          // addr to send to
+                printf("socket worked?\n");
+                //p0->socklength = p->ai_addrlen;                                 // length of addr to send to
+                //p0->addr = p->ai_addr;                                          // addr to send to
                 break;
             }
 
@@ -596,19 +600,16 @@ int load_net_data_file() {
                 g_net_link[i].pipe_node0 = node0;
                 g_net_link[i].pipe_node1 = node1;
             } else if (link_type == 'S') {   // Create a socket
-                printf("Creating a socket\n");
+                //printf("Creating a socket\n");
                 fscanf(fp, " %d %s %s %s %s", &node0, domain0, port0, domain1, port1);
-                printf("fscanf completed\n");
+                //printf("fscanf completed\n");
                 g_net_link[i].type = SOCKET;
                 g_net_link[i].pipe_node0 = node0;
-                printf("starting for loop\n");
-                for (int k = 0; k < NAME_LENGTH; k++) {
-                    g_net_link[i].port_recv[k] = port0[k];  // Port to listen to
-                    g_net_link[i].port_send[k] = port1[k];  // Port to send to
-                    //g_net_link[i].myDomain[k] = domain0[k];         // Domain to listen on (not necessary)
-                    g_net_link[i].sendingDomain[k] = domain1[k];  // Domain to send to
-                }
-                printf("g_net_link[%i] is filled with information\n",i);
+                printf("strcpy()\n");
+                strcpy(g_net_link[i].port_recv, port0);         // Port to listen to
+                strcpy(g_net_link[i].port_send, port1);         // Port to send to
+                strcpy(g_net_link[i].sendingDomain, domain1);   // Domain to send to
+
             } else {
                 // For implementing sockets eventually
                 printf("   net.c: Unidentified link type\n");
