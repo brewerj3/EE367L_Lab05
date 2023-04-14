@@ -81,7 +81,7 @@ int packet_recv(struct net_port *port, struct packet *p) {
         sin_size = sizeof their_addr;
         int new_fd = accept(port->recvSockfd, (struct sockaddr *) &their_addr, &sin_size);
         if(new_fd == -1) {
-            perror("accept");
+            //perror("accept");
             return 0;
         }
 
