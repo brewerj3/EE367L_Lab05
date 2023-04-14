@@ -23,9 +23,14 @@ struct net_port { /* port to communicate with another node */
     int pipe_host_id;
     int pipe_send_fd;
     int pipe_recv_fd;
-    int sendSockfd;
+    char sendPortNumber[100];
+    char recvPortNumber[100];
+    char sendDomain[100];
     int recvSockfd;
+    int sendSockfd;
     struct net_port *next;
+    socklen_t socklength;
+    struct sockaddr *addr;
 };
 
 /* Packet sent between nodes  */

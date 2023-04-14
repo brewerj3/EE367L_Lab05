@@ -50,11 +50,10 @@ struct net_link {
     enum NetLinkType type;
     int pipe_node0;
     int pipe_node1;
-    char tcp_socket_send[NAME_LENGTH];
-    char tcp_socket_recv[NAME_LENGTH];
+    char port_send[NAME_LENGTH];
+    char port_recv[NAME_LENGTH];
     char myDomain[NAME_LENGTH];
     char sendingDomain[NAME_LENGTH];
-    int sockfd;
 };
 
 
@@ -405,41 +404,37 @@ void create_port_list() {
 
         } else if (g_net_link[i].type == SOCKET) {
             // @TODO make this work
-            int sockfd, new_fd, numbytes;  // listen on sock_fd, send on sending_fd
-            struct addrinfo hints, *servinfo, *p;
-            struct sockaddr_storage their_addr; // connector's address information
-            socklen_t sin_size;
+            int listening_sockfd ,sending_sockfd;  // listen on sock_fd
+            struct addrinfo hints, *servinfo, *p, hints2, *servinfo2, *p;
             struct sigaction sa;
             int yes = 1;
-            char s[INET6_ADDRSTRLEN];
-            char buff[NAME_LENGTH];
 
-            int rv, rv2;
+            int rv;
 
             memset(&hints, 0, sizeof hints);
             hints.ai_family = AF_UNSPEC;
             hints.ai_socktype = SOCK_STREAM;
             hints.ai_flags = AI_PASSIVE; // use my IP
 
-            if ((rv = getaddrinfo(NULL, g_net_link[i].tcp_socket_recv, &hints, &servinfo)) != 0) {
+            if ((rv = getaddrinfo(NULL, g_net_link[i].port_recv, &hints, &servinfo)) != 0) {
                 fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
                 exit(1);
             }
             // loop through all the results and bind to the first we can
             for (p = servinfo; p != NULL; p = p->ai_next) {
                 //Creating socket file descriptor
-                if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+                if ((listening_sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
                     perror("server: socket");
                     continue;
                 }
                 // Force attach socket to port
-                if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+                if (setsockopt(listening_sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
                     perror("setsockopt");
                     exit(1);
                 }
 
-                if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-                    close(sockfd);
+                if (bind(listening_sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+                    close(listening_sockfd);
                     perror("server: bind");
                     continue;
                 }
@@ -447,7 +442,7 @@ void create_port_list() {
             }
 
             // Set as nonblocking
-            if (fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0) | O_NONBLOCK) == -1) {
+            if (fcntl(listening_sockfd, F_SETFL, fcntl(listening_sockfd, F_GETFL, 0) | O_NONBLOCK) == -1) {
                 perror("calling fcntl");
             }
 
@@ -459,7 +454,7 @@ void create_port_list() {
                 exit(1);
             }
 
-            if (listen(sockfd, 10) == -1) {
+            if (listen(listening_sockfd, 10) == -1) {
                 perror("listen");
                 exit(1);
             }
@@ -471,37 +466,33 @@ void create_port_list() {
                 perror("sigaction");
                 exit(1);
             }
-            p0 = (struct net_port *) malloc(sizeof(struct net_port));
-            p0->type = SOCKET;
-            p0->recvSockfd = sockfd;
 
-            // Setup sending socket
-            /*memset(&hints2, 0, sizeof hints2);
-            hints2.ai_family = AF_UNSPEC;
-            hints2.ai_socktype = SOCK_STREAM;
-
-            if((rv2 = getaddrinfo(g_net_link[i].sendingDomain, g_net_link[i].tcp_socket_send, &hints2, &servinfo2)) != 0) {
+            // Create sendSockfd, a socket file descriptor to send to.
+            memset(&hints2, 0, sizeof hints2);
+            if((rv = getaddrinfo(g_net_link[i].sendingDomain, g_net_link[i].port_send, &hints2, &servinfo2)) != 0) {
                 fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-                //exit(1);
+                exit(1);
             }
-            //accept()
-            for(p2 = servinfo2; p2 != NULL; p2 = p2->ai_next) {
-                if((sending_fd = socket(p2->ai_family, p2->ai_socktype, p2->ai_protocol)) == -1) {
-                    perror("client: socket");
-                    continue;
-                }
-                if(connect(sending_fd, p2->ai_addr, p2->ai_addrlen) == -1) {
-                    perror("client: connect");
-                    close(sending_fd);
+            for(p = servinfo; p != NULL; p = p->ai_next) {
+                if((sending_sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+                    perror("sending: socket");
                     continue;
                 }
                 break;
-            }*/
+            }
+
+            p0 = (struct net_port *) malloc(sizeof(struct net_port));
+            p0->type = g_net_link[i].type;
+            p0->pipe_host_id = g_net_link[i].pipe_node0;
+            p0->sendSockfd = sending_sockfd;                                // Socket file descriptor to send packets to
+            p0->recvSockfd = listening_sockfd;                              // Socket file descriptor listening on
+            p0->socklength = p->ai_addrlen;                                 // length of addr to send to
+            p0->addr = p->ai_addr;                                          // addr to send to
+            strcpy(p0->sendPortNumber, g_net_link[i].port_send);
+            strcpy(p0->recvPortNumber, g_net_link[i].port_recv);
 
 
-
-            p0->next = p1;
-            p1->next = g_port_list; /* Insert port in linked list */
+            p0->next = g_port_list;  // Insert port in linked list
             g_port_list = p0;
 
         }
@@ -606,10 +597,11 @@ int load_net_data_file() {
             } else if (link_type == 'S') {   // Create a socket
                 fscanf(fp, " %d %s %s %s %s", &node0, domain0, port0, domain1, port1);
                 g_net_link[i].type = SOCKET;
+                g_net_link[i].pipe_node0 = node0;
                 for (int k = 0; k < NAME_LENGTH; k++) {
-                    g_net_link[i].tcp_socket_recv[k] = port0[k];  // Socket to listen to
-                    g_net_link[i].tcp_socket_send[k] = port1[k];  // Socket to send to
-                    g_net_link[i].myDomain[k] = domain0[k];         // Domain to listen on
+                    g_net_link[i].port_recv[k] = port0[k];  // Port to listen to
+                    g_net_link[i].port_send[k] = port1[k];  // Port to send to
+                    //g_net_link[i].myDomain[k] = domain0[k];         // Domain to listen on (not necessary)
                     g_net_link[i].sendingDomain[k] = domain1[k];  // Domain to send to
                 }
 

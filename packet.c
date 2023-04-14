@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <string.h>
+#include <netdb.h>
 
 #include "main.h"
 #include "packet.h"
@@ -42,8 +43,13 @@ void packet_send(struct net_port *port, struct packet *p) {
         for (i = 0; i < p->length; i++) {
             msg[i + 4] = p->payload[i];
         }
+        // use connect() to connect to socket
+        if (connect(port->sendSockfd, port->addr, port->socklength) == -1) {
+            perror("client: connect");
+            return;
+        }
 
-        // Send the packet
+            // Send the packet
         write(port->sendSockfd, msg, p->length + 4);
     }
 
@@ -69,7 +75,17 @@ int packet_recv(struct net_port *port, struct packet *p) {
         }
     } else if(port->type == SOCKET) {
         // @TODO Do socket stuff
-        n = read(port->recvSockfd, msg, PAYLOAD_MAX + 4);
+        // Use accept to accept connection
+        socklen_t sin_size;
+        struct sockaddr_storage their_addr;
+        sin_size = sizeof their_addr;
+        int new_fd = accept(port->recvSockfd, (struct sockaddr *) &their_addr, &sin_size);
+        if(new_fd == -1) {
+            perror("accept");
+            return 0;
+        }
+
+        n = read(new_fd, msg, PAYLOAD_MAX + 4);
         if(n > 0) {
             p->src = (char) msg[0];             // The host id of the source
             p->dst = (char) msg[1];             // The host id of the intended destination of the packet
