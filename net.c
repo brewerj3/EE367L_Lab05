@@ -548,13 +548,13 @@ int load_net_data_file() {
         g_net_node = (struct net_node *) malloc(sizeof(struct net_node) * node_num);
         for (i = 0; i < node_num; i++) {
             fscanf(fp, " %c ", &node_type);
-
+            fscanf(fp, " %d ", &node_id);
             if (node_type == 'H') {
-                fscanf(fp, " %d ", &node_id);
+                //fscanf(fp, " %d ", &node_id);
                 g_net_node[i].type = HOST;
                 g_net_node[i].id = node_id;
             } else if (node_type == 'S') {
-                fscanf(fp, " %d ", &node_id);
+                //fscanf(fp, " %d ", &node_id);
                 g_net_node[i].type = SWITCH;
                 g_net_node[i].id = node_id;
             } else {
@@ -563,6 +563,7 @@ int load_net_data_file() {
 
             if (i != node_id) {
                 printf(" net.c: Incorrect node id\n");
+                printf("i = %i | node_id = %i\n", i, node_id);
                 fclose(fp);
                 return (0);
             }
@@ -605,7 +606,7 @@ int load_net_data_file() {
                 //printf("fscanf completed\n");
                 g_net_link[i].type = SOCKET;
                 g_net_link[i].pipe_node0 = node0;
-                printf("strcpy()\n");
+                //printf("strcpy()\n");
                 strcpy(g_net_link[i].port_recv, port0);         // Port to listen to
                 strcpy(g_net_link[i].port_send, port1);         // Port to send to
                 strcpy(g_net_link[i].sendingDomain, domain1);   // Domain to send to
