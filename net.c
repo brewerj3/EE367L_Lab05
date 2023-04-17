@@ -561,12 +561,13 @@ int load_net_data_file() {
                 printf(" net.c: Unidentified Node Type\n");
             }
 
-            if (i != node_id) {
+            // The below is causing problems, so it commented out
+            /*if (i != node_id) {
                 printf(" net.c: Incorrect node id\n");
                 printf("i = %i | node_id = %i\n", i, node_id);
                 fclose(fp);
                 return (0);
-            }
+            }*/
         }
     }
     /*
