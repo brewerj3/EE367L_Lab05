@@ -48,17 +48,22 @@ void packet_send(struct net_port *port, struct packet *p) {
         //create sockfd and connect to the port
         int rv, sockfd;
         struct addrinfo hints, *servinfo, *p1;
+        memset(&hints, 0, sizeof hints);
+        hints.ai_family = AF_UNSPEC;
+        hints.ai_socktype = SOCK_STREAM;
+
         if((rv = getaddrinfo(port->sendDomain, port->sendPortNumber, &hints, &servinfo)) != 0) {
             fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
             exit(1);
         }
+
         for(p1 = servinfo; p1 != NULL; p1 = p1->ai_next) {
             if((sockfd = socket(p1->ai_family, p1->ai_socktype, p1->ai_protocol)) == -1) {
-                perror("sending: socket");
+                perror("sending packet: socket");
                 continue;
             }
-            if (connect(port->sendSockfd, p1->ai_addr, p1->ai_addrlen) == -1) {
-                perror("client: connect");
+            if (connect(sockfd, p1->ai_addr, p1->ai_addrlen) == -1) {
+                perror("sending packet: connect");
                 close(sockfd);
                 continue;
             }
@@ -68,11 +73,11 @@ void packet_send(struct net_port *port, struct packet *p) {
 
         if (p1 == NULL) {
             fprintf(stderr, "client: failed to connect\n");
-            return;
+            //return;
         }
 
         // Send the packet
-        write(port->sendSockfd, msg, p->length + 4);
+        write(sockfd, msg, p->length + 4);
 
         // Close the socket when done
         close(sockfd);

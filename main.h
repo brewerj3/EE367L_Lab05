@@ -27,7 +27,6 @@ struct net_port { /* port to communicate with another node */
     char recvPortNumber[100];
     char sendDomain[100];
     int recvSockfd;
-    int sendSockfd;
     struct net_port *next;
 };
 

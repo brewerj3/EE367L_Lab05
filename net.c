@@ -466,16 +466,9 @@ void create_port_list() {
                 perror("sigaction");
                 exit(1);
             }
-            //
 
-            // Create sendSockfd, a socket file descriptor to send to.
-            memset(&hints2, 0, sizeof hints2);
+            // Put information needed to connect to socket into p0
             printf("g_net_link[%i].sendingDomain = %s\n", i, g_net_link[i].sendingDomain);
-
-            /*if((rv = getaddrinfo(g_net_link[i].sendingDomain, g_net_link[i].port_send, &hints2, &servinfo2)) != 0) {
-                fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-                exit(1);
-            }*/
 
             p0 = (struct net_port *) malloc(sizeof(struct net_port));
             p0->type = g_net_link[i].type;                                  // Set connection type
@@ -486,7 +479,6 @@ void create_port_list() {
             strcpy(p0->recvPortNumber, g_net_link[i].port_recv);   // Port to listen on
             p0->next = g_port_list;  // Insert port in linked list
             g_port_list = p0;
-
         }
 
     }
@@ -547,7 +539,7 @@ int load_net_data_file() {
                 printf(" net.c: Unidentified Node Type\n");
             }
 
-            // The below is causing problems, so it commented out
+            // The below is causing problems, so it is commented out
             /*if (i != node_id) {
                 printf(" net.c: Incorrect node id\n");
                 printf("i = %i | node_id = %i\n", i, node_id);
