@@ -17,7 +17,7 @@
 void packet_send(struct net_port *port, struct packet *p) {
     char msg[PAYLOAD_MAX + 4];
     int i;
-
+    static int alreadyConnected = 0;    // 0 is false
     if (port->type == PIPE) {
         // The first 4 parts of the array contain information about the packet
         msg[0] = (char) p->src;     // The source of the packet being sent, (the host id)
@@ -33,6 +33,7 @@ void packet_send(struct net_port *port, struct packet *p) {
         // This actually sends the packet
         write(port->pipe_send_fd, msg, p->length + 4);
     } else if(port->type == SOCKET) {
+        printf("sending packet through a socket\n");
         // @TODO Do socket stuff
         msg[0] = (char) p->src;     // The source of the packet being sent, (the host id)
         msg[1] = (char) p->dst;     // The destination of the packet being sent
@@ -43,14 +44,38 @@ void packet_send(struct net_port *port, struct packet *p) {
         for (i = 0; i < p->length; i++) {
             msg[i + 4] = p->payload[i];
         }
-        // use connect() to connect to socket
-        if (connect(port->sendSockfd, port->addr, port->socklength) == -1) {
-            perror("client: connect");
+
+        //create sockfd and connect to the port
+        int rv, sockfd;
+        struct addrinfo hints, *servinfo, *p1;
+        if((rv = getaddrinfo(port->sendDomain, port->sendPortNumber, &hints, &servinfo)) != 0) {
+            fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+            exit(1);
+        }
+        for(p1 = servinfo; p1 != NULL; p1 = p1->ai_next) {
+            if((sockfd = socket(p1->ai_family, p1->ai_socktype, p1->ai_protocol)) == -1) {
+                perror("sending: socket");
+                continue;
+            }
+            if (connect(port->sendSockfd, p1->ai_addr, p1->ai_addrlen) == -1) {
+                perror("client: connect");
+                close(sockfd);
+                continue;
+            }
+            printf("socket worked?\n");
+            break;
+        }
+
+        if (p1 == NULL) {
+            fprintf(stderr, "client: failed to connect\n");
             return;
         }
 
-            // Send the packet
+        // Send the packet
         write(port->sendSockfd, msg, p->length + 4);
+
+        // Close the socket when done
+        close(sockfd);
     }
 
 }

@@ -466,38 +466,24 @@ void create_port_list() {
                 perror("sigaction");
                 exit(1);
             }
+            //
 
             // Create sendSockfd, a socket file descriptor to send to.
             memset(&hints2, 0, sizeof hints2);
             printf("g_net_link[%i].sendingDomain = %s\n", i, g_net_link[i].sendingDomain);
 
-            if((rv = getaddrinfo(g_net_link[i].sendingDomain, g_net_link[i].port_send, &hints2, &servinfo2)) != 0) {
+            /*if((rv = getaddrinfo(g_net_link[i].sendingDomain, g_net_link[i].port_send, &hints2, &servinfo2)) != 0) {
                 fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
                 exit(1);
-            }
+            }*/
 
             p0 = (struct net_port *) malloc(sizeof(struct net_port));
-
-            for(p = servinfo2; p != NULL; p = p->ai_next) {
-                if((sending_sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-                    perror("sending: socket");
-                    continue;
-                }
-                printf("socket worked?\n");
-                //p0->socklength = p->ai_addrlen;                                 // length of addr to send to
-                //p0->addr = p->ai_addr;                                          // addr to send to
-                break;
-            }
-
-
-            p0->type = g_net_link[i].type;
-            p0->pipe_host_id = g_net_link[i].pipe_node0;
-            p0->sendSockfd = sending_sockfd;                                // Socket file descriptor to send packets to
+            p0->type = g_net_link[i].type;                                  // Set connection type
+            strcpy(p0->sendDomain, g_net_link[i].sendingDomain);   // Put domain to send to into net port
+            strcpy(p0->sendPortNumber, g_net_link[i].port_send);   // Put service port into net port
+            p0->pipe_host_id = g_net_link[i].pipe_node0;                    // Set the host id for the connection
             p0->recvSockfd = listening_sockfd;                              // Socket file descriptor listening on
-            strcpy(p0->sendPortNumber, g_net_link[i].port_send);
-            strcpy(p0->recvPortNumber, g_net_link[i].port_recv);
-
-
+            strcpy(p0->recvPortNumber, g_net_link[i].port_recv);   // Port to listen on
             p0->next = g_port_list;  // Insert port in linked list
             g_port_list = p0;
 

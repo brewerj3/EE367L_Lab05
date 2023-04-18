@@ -29,8 +29,6 @@ struct net_port { /* port to communicate with another node */
     int recvSockfd;
     int sendSockfd;
     struct net_port *next;
-    socklen_t socklength;
-    struct sockaddr *addr;
 };
 
 /* Packet sent between nodes  */
