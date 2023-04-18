@@ -333,7 +333,7 @@ void create_man_ports(struct man_port_at_man **p_man, struct man_port_at_host **
 /* Create a linked list of nodes at g_node_list */
 void create_node_list() {
     struct net_node *p;
-    int i;
+    int i;              // @TODO i needs to be set properly
 
     g_node_list = NULL;
     for (i = 0; i < g_net_node_num; i++) {

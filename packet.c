@@ -114,7 +114,7 @@ int packet_recv(struct net_port *port, struct packet *p) {
             //perror("accept");
             return 0;
         }
-
+        printf("accepted\n");
         n = read(new_fd, msg, PAYLOAD_MAX + 4);
         close(new_fd);
         if(n > 0) {
