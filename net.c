@@ -472,6 +472,7 @@ void create_port_list() {
 
             // Put information needed to connect to socket into p0
             printf("g_net_link[%i].sendingDomain = %s\n", i, g_net_link[i].sendingDomain);
+            printf("g_net_link[%i].port_send     = %s\n", i, g_net_link[i].port_send);
 
             p0 = (struct net_port *) malloc(sizeof(struct net_port));
             p0->type = g_net_link[i].type;                                  // Set connection type
