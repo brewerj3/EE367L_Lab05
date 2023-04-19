@@ -404,8 +404,8 @@ void create_port_list() {
 
         } else if (g_net_link[i].type == SOCKET) {
             // @TODO make this work
-            int listening_sockfd ,sending_sockfd;  // listen on sock_fd
-            struct addrinfo hints, *servinfo, *p, hints2, *servinfo2;
+            int listening_sockfd;  // listen on sock_fd
+            struct addrinfo hints, *servinfo, *p;
             struct sigaction sa;
             int yes = 1;
 
@@ -420,6 +420,7 @@ void create_port_list() {
                 fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
                 exit(1);
             }
+
             // loop through all the results and bind to the first we can
             for (p = servinfo; p != NULL; p = p->ai_next) {
                 //Creating socket file descriptor
@@ -430,7 +431,7 @@ void create_port_list() {
                 // Force attach socket to port
                 if (setsockopt(listening_sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
                     perror("setsockopt");
-                    exit(1);
+                    continue;
                 }
 
                 if (bind(listening_sockfd, p->ai_addr, p->ai_addrlen) == -1) {
@@ -438,12 +439,13 @@ void create_port_list() {
                     perror("server: bind");
                     continue;
                 }
-                break;
-            }
 
-            // Set as nonblocking
-            if (fcntl(listening_sockfd, F_SETFL, fcntl(listening_sockfd, F_GETFL, 0) | O_NONBLOCK) == -1) {
-                perror("calling fcntl");
+                // Set as nonblocking
+                if (fcntl(listening_sockfd, F_SETFL, fcntl(listening_sockfd, F_GETFL, 0) | O_NONBLOCK) == -1) {
+                    perror("calling fcntl");
+                    continue;
+                }
+                break;
             }
 
             freeaddrinfo(servinfo); // All done with this structure
@@ -454,6 +456,7 @@ void create_port_list() {
                 exit(1);
             }
 
+            // Set socket to listen
             if (listen(listening_sockfd, 10) == -1) {
                 perror("listen");
                 exit(1);
@@ -587,8 +590,8 @@ int load_net_data_file() {
                 g_net_link[i].pipe_node0 = node0;
                 //printf("strcpy()\n");
                 strcpy(g_net_link[i].port_recv, port0);         // Port to listen to
-                strcpy(g_net_link[i].port_send, port1);         // Port to send to
                 strcpy(g_net_link[i].sendingDomain, domain1);   // Domain to send to
+                strcpy(g_net_link[i].port_send, port1);         // Port to send to
 
             } else {
                 // For implementing sockets eventually
