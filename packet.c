@@ -106,16 +106,14 @@ int packet_recv(struct net_port *port, struct packet *p) {
     } else if(port->type == SOCKET) {
         // @TODO Do socket stuff
         // Use accept to accept connection
-        socklen_t sin_size;
-        struct sockaddr_storage their_addr;
-        sin_size = sizeof their_addr;
-        int new_fd = accept(port->recvSockfd, (struct sockaddr *) &their_addr, &sin_size);
+        int new_fd = accept(port->recvSockfd, NULL, 0);
         if(new_fd == -1) {
+            // If new_fd equals -1 then there is no connect attempt
             //perror("accept");
             return 0;
         }
-        printf("accepted\n");
-        n = read(new_fd, msg, PAYLOAD_MAX + 4);
+
+        n = read(new_fd, msg, PAYLOAD_MAX + 4, 0);
         close(new_fd);
         if(n > 0) {
             p->src = (char) msg[0];             // The host id of the source
