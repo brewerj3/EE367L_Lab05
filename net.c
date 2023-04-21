@@ -52,7 +52,7 @@ struct net_link {
     int pipe_node1;
     char port_send[NAME_LENGTH];
     char port_recv[NAME_LENGTH];
-    char myDomain[NAME_LENGTH];
+    char recvDomain[NAME_LENGTH];
     char sendingDomain[NAME_LENGTH];
 };
 
@@ -338,7 +338,7 @@ void create_node_list() {
     g_node_list = NULL;
     for (i = 0; i < g_net_node_num; i++) {
         p = (struct net_node *) malloc(sizeof(struct net_node));
-        p->id = i;
+        p->id = g_net_node[i].id;
         p->type = g_net_node[i].type;
         p->next = g_node_list;
         g_node_list = p;
@@ -404,84 +404,26 @@ void create_port_list() {
 
         } else if (g_net_link[i].type == SOCKET) {
 
-            /*int listening_sockfd;  // listen on sock_fd
-            struct addrinfo hints, *servinfo, *p;
-            struct sigaction sa;
-            int yes = 1;
-
-            int rv;
-
-            memset(&hints, 0, sizeof hints);
-            hints.ai_family = AF_UNSPEC;
-            hints.ai_socktype = SOCK_STREAM;
-            hints.ai_flags = AI_PASSIVE; // use my IP
-
-            if ((rv = getaddrinfo(NULL, g_net_link[i].port_recv, &hints, &servinfo)) != 0) {
-                fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-                exit(1);
-            }
-
-            // loop through all the results and bind to the first we can
-            for (p = servinfo; p != NULL; p = p->ai_next) {
-                //Creating socket file descriptor
-                if ((listening_sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-                    perror("server: socket");
-                    continue;
-                }
-                // Force attach socket to port
-                if (setsockopt(listening_sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
-                    perror("setsockopt");
-                    continue;
-                }
-
-                if (bind(listening_sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-                    close(listening_sockfd);
-                    perror("server: bind");
-                    continue;
-                }
-
-                // Set as nonblocking
-                if (fcntl(listening_sockfd, F_SETFL, fcntl(listening_sockfd, F_GETFL, 0) | O_NONBLOCK) == -1) {
-                    perror("calling fcntl");
-                    continue;
-                }
-                break;
-            }
-
-            freeaddrinfo(servinfo); // All done with this structure
-
-            // Check if server failed to bind
-            if (p == NULL) {
-                fprintf(stderr, "server: failed to bind\n");
-                exit(1);
-            }
-
-            // Set socket to listen
-            if (listen(listening_sockfd, 10) == -1) {
-                perror("listen");
-                exit(1);
-            }
-
-            sa.sa_handler = sigchld_handler; // reap all dead processes
-            sigemptyset(&sa.sa_mask);
-            sa.sa_flags = SA_RESTART;
-            if (sigaction(SIGCHLD, &sa, NULL) == -1) {
-                perror("sigaction");
-                exit(1);
-            }*/
-
             // Put information needed to connect to socket into p0
             printf("g_net_link[%i].sendingDomain = %s\n", i, g_net_link[i].sendingDomain);
             printf("g_net_link[%i].port_send     = %s\n", i, g_net_link[i].port_send);
 
             p0 = (struct net_port *) malloc(sizeof(struct net_port));
-            p0->type = g_net_link[i].type;                                  // Set connection type
-            strcpy(p0->sendDomain, g_net_link[i].sendingDomain);   // Put domain to send to into net port
-            strcpy(p0->sendPortNumber, g_net_link[i].port_send);   // Put service port into net port
+            p0->type = SOCKET;                                  // Set connection type
             p0->pipe_host_id = g_net_link[i].pipe_node0;                    // Set the host id for the connection
-            //p0->recvSockfd = listening_sockfd;                              // Socket file descriptor listening on
+
+            p1 = (struct net_port *) malloc(sizeof(struct net_port));
+            p1->type = SOCKET;
+            p1->pipe_host_id = g_net_link[i].pipe_node0;
+
+            strcpy(p0->sendDomain, g_net_link[i].sendingDomain);   // Put domain to send to into net port
+            //strcpy(p0->recvDomain, g_net_link[i].recvDomain);
+            //strcpy(p1->recvDomain, g_net_link[i].recvDomain);
+            strcpy(p0->sendPortNumber, g_net_link[i].port_send);   // Put service port into net port
             strcpy(p0->recvPortNumber, g_net_link[i].port_recv);   // Port to listen on
-            p0->next = g_port_list;  // Insert port in linked list
+
+            p0->next = p1;  // Insert port in linked list
+            p1->next = g_port_list;
             g_port_list = p0;
         }
 
@@ -590,6 +532,7 @@ int load_net_data_file() {
                 g_net_link[i].type = SOCKET;
                 g_net_link[i].pipe_node0 = node0;
                 //printf("strcpy()\n");
+                //strcpy(g_net_link[i].recv)
                 strcpy(g_net_link[i].port_recv, port0);         // Port to listen to
                 strcpy(g_net_link[i].sendingDomain, domain1);   // Domain to send to
                 strcpy(g_net_link[i].port_send, port1);         // Port to send to
@@ -618,7 +561,7 @@ int load_net_data_file() {
         if (g_net_link[i].type == PIPE) {
             printf("   Link (%d, %d) PIPE\n", g_net_link[i].pipe_node0, g_net_link[i].pipe_node1);
         } else if (g_net_link[i].type == SOCKET) {
-            printf("   Socket: to be constructed (net.c)\n");
+            printf("   Link (%d, %s) SOCKET\n", g_net_link[i].pipe_node0, g_net_link[i].port_send);
         }
     }
 

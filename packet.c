@@ -151,7 +151,7 @@ int packet_recv(struct net_port *port, struct packet *p) {
     char msg[PAYLOAD_MAX + 4];
     int n;
     int i;
-    static int setup = 0;
+    static int setup = 1;
     if (port->type == PIPE) {
         // n is an error code given by the read function
         n = read(port->pipe_recv_fd, msg, PAYLOAD_MAX + 4);
@@ -165,16 +165,18 @@ int packet_recv(struct net_port *port, struct packet *p) {
             }
         }
     } else if(port->type == SOCKET) {
+        printf("socket Recv\n");
         static int sockfd;
         int new_fd;
         // @TODO Do socket stuff
         // Setup the listening socket
-        if(setup == 0) {
+        if(setup != 0) {
+            printf("setting up listening socket\n");
             sockfd = setupListeningSocket(port);
             if(sockfd == -1) {
                 printf("function setupListeningSocket errored\n");
             }
-            setup = 1;
+            setup = 0;
         }
         // Use accept to accept connection
         new_fd = accept(port->recvSockfd, NULL, 0);
