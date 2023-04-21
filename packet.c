@@ -94,7 +94,7 @@ void packet_send(struct net_port *port, struct packet *p) {
         // This actually sends the packet
         write(port->pipe_send_fd, msg, p->length + 4);
     } else if(port->type == SOCKET) {
-        printf("sending packet through a socket\n");
+        //printf("sending packet through a socket\n");
         // @TODO Do socket stuff
         msg[0] = (char) p->src;     // The source of the packet being sent, (the host id)
         msg[1] = (char) p->dst;     // The destination of the packet being sent
@@ -128,7 +128,7 @@ void packet_send(struct net_port *port, struct packet *p) {
                 close(sockfd);
                 continue;
             }
-            printf("socket worked?\n");
+            //printf("socket worked?\n");
             break;
         }
 

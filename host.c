@@ -246,13 +246,13 @@ _Noreturn void host_main(int host_id) {
  * at the host.  The number of ports is node_port_num
  */
     node_port_list = net_get_port_list(host_id);
-    printf("host_id = %i\n",host_id);
+    //printf("host_id = %i\n",host_id);
     /*  Count the number of network link ports */
     node_port_num = 0;
     for (p = node_port_list; p != NULL; p = p->next) {
         node_port_num++;
     }
-    printf("node_port_num = %i\n",node_port_num);
+    //printf("node_port_num = %i\n",node_port_num);
     /* Create memory space for the array */
     node_port = (struct net_port **) malloc(node_port_num * sizeof(struct net_port *));
 
