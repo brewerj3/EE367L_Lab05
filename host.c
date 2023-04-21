@@ -246,12 +246,13 @@ _Noreturn void host_main(int host_id) {
  * at the host.  The number of ports is node_port_num
  */
     node_port_list = net_get_port_list(host_id);
-
+    //printf("host_id = %i\n",host_id);
     /*  Count the number of network link ports */
     node_port_num = 0;
     for (p = node_port_list; p != NULL; p = p->next) {
         node_port_num++;
     }
+    //printf("node_port_num = %i\n",node_port_num);
     /* Create memory space for the array */
     node_port = (struct net_port **) malloc(node_port_num * sizeof(struct net_port *));
 
@@ -352,8 +353,9 @@ _Noreturn void host_main(int host_id) {
 
         for (k = 0; k < node_port_num; k++) { /* Scan all ports */
 
+            //printf("k = %i\n",k);
             in_packet = (struct packet *) malloc(sizeof(struct packet));
-            n = packet_recv(node_port[k], in_packet);                   // This reads incoming packets
+            n = packet_recv(node_port[k], in_packet);                   // This reads incoming packets @TODO currently not getting here when host id does not start at zero
 
             if ((n > 0) && ((int) in_packet->dst == host_id)) {
                 new_job = (struct host_job *) malloc(sizeof(struct host_job));

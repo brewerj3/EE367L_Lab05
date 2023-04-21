@@ -12,6 +12,67 @@
 #include "net.h"
 #include "host.h"
 
+// return the socket file descriptor
+int setupListeningSocket(struct net_port *port) {
+    int static listening_sockfd, rv;  // listen on sock_fd
+    static struct addrinfo hints, *servinfo, *p;
+    static int yes = 1;
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
+
+    if ((rv = getaddrinfo(NULL, port->recvPortNumber, &hints, &servinfo)) != 0) {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+        return -1;
+    }
+
+    // loop through all the results and bind to the first we can
+    for (p = servinfo; p != NULL; p = p->ai_next) {
+        //Creating socket file descriptor
+        if ((listening_sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+            perror("packet.c: socket");
+            continue;
+        }
+        // Force attach socket to port
+        if (setsockopt(listening_sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+            perror("packet.c: setsockopt");
+            continue;
+        }
+
+        // Bind to port
+        if (bind(listening_sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+            close(listening_sockfd);
+            perror("packet.c: bind");
+            continue;
+        }
+
+        // Set as nonblocking
+        if (fcntl(listening_sockfd, F_SETFL, fcntl(listening_sockfd, F_GETFL, 0) | O_NONBLOCK) == -1) {
+            perror("packet.c: calling fcntl");
+            continue;
+        }
+        break;
+    }
+
+    freeaddrinfo(servinfo); // All done with this structure
+
+    // Check if server failed to bind
+    if (p == NULL) {
+        fprintf(stderr, "packet.c: failed to bind\n");
+        return -1;
+    }
+
+    // Set socket to listen
+    if (listen(listening_sockfd, 10) == -1) {
+        perror("packet.c: listen");
+        return -1;
+    }
+    return listening_sockfd;
+
+}
+
 
 // This sends the packet to the net_port.
 void packet_send(struct net_port *port, struct packet *p) {
@@ -33,7 +94,7 @@ void packet_send(struct net_port *port, struct packet *p) {
         // This actually sends the packet
         write(port->pipe_send_fd, msg, p->length + 4);
     } else if(port->type == SOCKET) {
-        printf("sending packet through a socket\n");
+        //printf("sending packet through a socket\n");
         // @TODO Do socket stuff
         msg[0] = (char) p->src;     // The source of the packet being sent, (the host id)
         msg[1] = (char) p->dst;     // The destination of the packet being sent
@@ -67,7 +128,7 @@ void packet_send(struct net_port *port, struct packet *p) {
                 close(sockfd);
                 continue;
             }
-            printf("socket worked?\n");
+            //printf("socket worked?\n");
             break;
         }
 
@@ -77,7 +138,7 @@ void packet_send(struct net_port *port, struct packet *p) {
         }
 
         // Send the packet
-        write(sockfd, msg, p->length + 4);
+        send(sockfd, msg, p->length + 4,0);
 
         // Close the socket when done
         close(sockfd);
@@ -90,7 +151,7 @@ int packet_recv(struct net_port *port, struct packet *p) {
     char msg[PAYLOAD_MAX + 4];
     int n;
     int i;
-
+    static int setup = 1;
     if (port->type == PIPE) {
         // n is an error code given by the read function
         n = read(port->pipe_recv_fd, msg, PAYLOAD_MAX + 4);
@@ -104,18 +165,31 @@ int packet_recv(struct net_port *port, struct packet *p) {
             }
         }
     } else if(port->type == SOCKET) {
+        //printf("socket Recv\n");
+        static int sockfd;
+        int new_fd;
         // @TODO Do socket stuff
+        // Setup the listening socket
+        if(setup != 0) {
+            printf("setting up listening socket\n");
+            sockfd = setupListeningSocket(port);
+            if(sockfd == -1) {
+                printf("function setupListeningSocket errored\n");
+            }
+            setup = 0;
+        }
         // Use accept to accept connection
-        int new_fd = accept(port->recvSockfd, NULL, 0);
+        new_fd = accept(sockfd, NULL, 0);
         if(new_fd == -1) {
             // If new_fd equals -1 then there is no connect attempt
             //perror("accept");
             return 0;
         }
 
-        n = read(new_fd, msg, PAYLOAD_MAX + 4, 0);
+        n = recv(new_fd, msg, PAYLOAD_MAX + 4, 0);
         close(new_fd);
         if(n > 0) {
+            //printf("recieved on socket\n");
             p->src = (char) msg[0];             // The host id of the source
             p->dst = (char) msg[1];             // The host id of the intended destination of the packet
             p->type = (char) msg[2];            // The type of packet
