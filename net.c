@@ -422,8 +422,7 @@ void create_port_list() {
             strcpy(p0->sendPortNumber, g_net_link[i].port_send);   // Put service port into net port
             strcpy(p0->recvPortNumber, g_net_link[i].port_recv);   // Port to listen on
 
-            p0->next = p1;  // Insert port in linked list
-            p1->next = g_port_list;
+            p0->next = g_port_list; // Insert Node into linked list
             g_port_list = p0;
         }
 

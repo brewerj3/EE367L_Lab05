@@ -353,7 +353,7 @@ _Noreturn void host_main(int host_id) {
 
         for (k = 0; k < node_port_num; k++) { /* Scan all ports */
 
-            printf("k = %i\n",k);
+            //printf("k = %i\n",k);
             in_packet = (struct packet *) malloc(sizeof(struct packet));
             n = packet_recv(node_port[k], in_packet);                   // This reads incoming packets @TODO currently not getting here when host id does not start at zero
 

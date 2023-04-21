@@ -138,7 +138,7 @@ void packet_send(struct net_port *port, struct packet *p) {
         }
 
         // Send the packet
-        write(sockfd, msg, p->length + 4);
+        send(sockfd, msg, p->length + 4,0);
 
         // Close the socket when done
         close(sockfd);
@@ -165,7 +165,7 @@ int packet_recv(struct net_port *port, struct packet *p) {
             }
         }
     } else if(port->type == SOCKET) {
-        printf("socket Recv\n");
+        //printf("socket Recv\n");
         static int sockfd;
         int new_fd;
         // @TODO Do socket stuff
@@ -179,16 +179,17 @@ int packet_recv(struct net_port *port, struct packet *p) {
             setup = 0;
         }
         // Use accept to accept connection
-        new_fd = accept(port->recvSockfd, NULL, 0);
+        new_fd = accept(sockfd, NULL, 0);
         if(new_fd == -1) {
             // If new_fd equals -1 then there is no connect attempt
             //perror("accept");
             return 0;
         }
 
-        n = read(new_fd, msg, PAYLOAD_MAX + 4);
+        n = recv(new_fd, msg, PAYLOAD_MAX + 4, 0);
         close(new_fd);
         if(n > 0) {
+            //printf("recieved on socket\n");
             p->src = (char) msg[0];             // The host id of the source
             p->dst = (char) msg[1];             // The host id of the intended destination of the packet
             p->type = (char) msg[2];            // The type of packet
