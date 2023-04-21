@@ -12,6 +12,67 @@
 #include "net.h"
 #include "host.h"
 
+// return the socket file descriptor
+int setupListeningSocket(struct net_port *port) {
+    int static listening_sockfd, rv;  // listen on sock_fd
+    static struct addrinfo hints, *servinfo, *p;
+    static int yes = 1;
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
+
+    if ((rv = getaddrinfo(NULL, port->recvPortNumber, &hints, &servinfo)) != 0) {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+        return -1;
+    }
+
+    // loop through all the results and bind to the first we can
+    for (p = servinfo; p != NULL; p = p->ai_next) {
+        //Creating socket file descriptor
+        if ((listening_sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+            perror("packet.c: socket");
+            continue;
+        }
+        // Force attach socket to port
+        if (setsockopt(listening_sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+            perror("packet.c: setsockopt");
+            continue;
+        }
+
+        // Bind to port
+        if (bind(listening_sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+            close(listening_sockfd);
+            perror("packet.c: bind");
+            continue;
+        }
+
+        // Set as nonblocking
+        if (fcntl(listening_sockfd, F_SETFL, fcntl(listening_sockfd, F_GETFL, 0) | O_NONBLOCK) == -1) {
+            perror("packet.c: calling fcntl");
+            continue;
+        }
+        break;
+    }
+
+    freeaddrinfo(servinfo); // All done with this structure
+
+    // Check if server failed to bind
+    if (p == NULL) {
+        fprintf(stderr, "packet.c: failed to bind\n");
+        return -1;
+    }
+
+    // Set socket to listen
+    if (listen(listening_sockfd, 10) == -1) {
+        perror("packet.c: listen");
+        return -1;
+    }
+    return listening_sockfd;
+
+}
+
 
 // This sends the packet to the net_port.
 void packet_send(struct net_port *port, struct packet *p) {
@@ -90,7 +151,7 @@ int packet_recv(struct net_port *port, struct packet *p) {
     char msg[PAYLOAD_MAX + 4];
     int n;
     int i;
-
+    static int setup = 0;
     if (port->type == PIPE) {
         // n is an error code given by the read function
         n = read(port->pipe_recv_fd, msg, PAYLOAD_MAX + 4);
@@ -104,7 +165,15 @@ int packet_recv(struct net_port *port, struct packet *p) {
             }
         }
     } else if(port->type == SOCKET) {
+        static int sockfd;
         // @TODO Do socket stuff
+        if(setup == 0) {
+            sockfd = setupListeningSocket(port);
+            if(sockfd == -1) {
+                printf("function setupListeningSocket errored\n");
+            }
+            setup = 1;
+        }
         // Use accept to accept connection
         int new_fd = accept(port->recvSockfd, NULL, 0);
         if(new_fd == -1) {
@@ -113,7 +182,7 @@ int packet_recv(struct net_port *port, struct packet *p) {
             return 0;
         }
 
-        n = read(new_fd, msg, PAYLOAD_MAX + 4, 0);
+        n = read(new_fd, msg, PAYLOAD_MAX + 4);
         close(new_fd);
         if(n > 0) {
             p->src = (char) msg[0];             // The host id of the source

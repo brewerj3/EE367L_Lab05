@@ -404,7 +404,7 @@ void create_port_list() {
 
         } else if (g_net_link[i].type == SOCKET) {
             // @TODO make this work
-            int listening_sockfd;  // listen on sock_fd
+            /*int listening_sockfd;  // listen on sock_fd
             struct addrinfo hints, *servinfo, *p;
             struct sigaction sa;
             int yes = 1;
@@ -468,7 +468,7 @@ void create_port_list() {
             if (sigaction(SIGCHLD, &sa, NULL) == -1) {
                 perror("sigaction");
                 exit(1);
-            }
+            }*/
 
             // Put information needed to connect to socket into p0
             printf("g_net_link[%i].sendingDomain = %s\n", i, g_net_link[i].sendingDomain);
@@ -479,7 +479,7 @@ void create_port_list() {
             strcpy(p0->sendDomain, g_net_link[i].sendingDomain);   // Put domain to send to into net port
             strcpy(p0->sendPortNumber, g_net_link[i].port_send);   // Put service port into net port
             p0->pipe_host_id = g_net_link[i].pipe_node0;                    // Set the host id for the connection
-            p0->recvSockfd = listening_sockfd;                              // Socket file descriptor listening on
+            //p0->recvSockfd = listening_sockfd;                              // Socket file descriptor listening on
             strcpy(p0->recvPortNumber, g_net_link[i].port_recv);   // Port to listen on
             p0->next = g_port_list;  // Insert port in linked list
             g_port_list = p0;
