@@ -403,7 +403,7 @@ void create_port_list() {
             g_port_list = p0;
 
         } else if (g_net_link[i].type == SOCKET) {
-            // @TODO make this work
+
             /*int listening_sockfd;  // listen on sock_fd
             struct addrinfo hints, *servinfo, *p;
             struct sigaction sa;

@@ -166,7 +166,9 @@ int packet_recv(struct net_port *port, struct packet *p) {
         }
     } else if(port->type == SOCKET) {
         static int sockfd;
+        int new_fd;
         // @TODO Do socket stuff
+        // Setup the listening socket
         if(setup == 0) {
             sockfd = setupListeningSocket(port);
             if(sockfd == -1) {
@@ -175,7 +177,7 @@ int packet_recv(struct net_port *port, struct packet *p) {
             setup = 1;
         }
         // Use accept to accept connection
-        int new_fd = accept(port->recvSockfd, NULL, 0);
+        new_fd = accept(port->recvSockfd, NULL, 0);
         if(new_fd == -1) {
             // If new_fd equals -1 then there is no connect attempt
             //perror("accept");
