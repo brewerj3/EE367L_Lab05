@@ -464,7 +464,7 @@ int load_net_data_file() {
     g_net_node_num = node_num;
 
     if (node_num < 1) {
-        printf("net.c: No nodes\n");
+        printf("net.c: NO nodes\n");
         fclose(fp);
         return (0);
     } else {
@@ -512,7 +512,7 @@ int load_net_data_file() {
     g_net_link_num = link_num;
 
     if (link_num < 1) {
-        printf("net.c: No links\n");
+        printf("net.c: NO links\n");
         fclose(fp);
         return (0);
     } else {

@@ -7,6 +7,11 @@ enum valid {
     True
 };
 
+enum yesNo {
+    YES,
+    NO
+};
+
 struct Table {
     enum valid isValid[MAX_LOOKUP_TABLE_SIZE];
     int destination[MAX_LOOKUP_TABLE_SIZE];

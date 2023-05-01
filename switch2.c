@@ -22,9 +22,12 @@ _Noreturn void switch_main(int host_id) {
     struct net_port *node_port_list;
     struct net_port **node_port;    // Array of pointers to node pointers
     int node_port_num;              // Number of node ports
+    int localRootID = host_id;      // Switch initially makes itself the root of the tree
+    int localRootDist = 0;          // Switch initially has itself as the root thus has distance 0
+    int localParent = -1;           // should be node ID of parent in the tree. initially -1 because switch believes itself to be root
 
     int i, k, n;
-    int dst;
+    int dst;    // Destination of a packet
 
     struct packet *in_packet;       // Incoming packet
     struct packet *new_packet;
@@ -48,11 +51,15 @@ _Noreturn void switch_main(int host_id) {
     // Create memory space for the array
     node_port = (struct net_port **) malloc(node_port_num * sizeof(struct net_port *));
 
+    // Create local port tree array
+    enum yesNo localPortTree[node_port_num];
+
     // load ports into the array
     p = node_port_list;
     for(k = 0; k < node_port_num; k++) {
         node_port[k] = p;
         p = p->next;
+        localPortTree[k] = NO; // all ports are initially not in the tree
     }
 
     // Need to initialize the lookup table
@@ -66,7 +73,7 @@ _Noreturn void switch_main(int host_id) {
     job_q_init(&job_q);
 
     while(1) {
-        // No need to get commands from the manager
+        // NO need to get commands from the manager
 
         // Scan all ports
         for( k = 0; k < node_port_num; k++) {
