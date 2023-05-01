@@ -181,16 +181,23 @@ _Noreturn void switch_main(int host_id) {
                 // Send the packet on all ports
                 case JOB_SEND_PKT_ALL_PORTS:
                     for (k = 0; k < node_port_num; k++ ) {
-                        if(k == (int) new_job->packet->src) {
-                            continue;
-                        }
                         if(new_job->packet->type == PKT_CONTROL_PACKET) {
-                            if(localPortTree[k] == YES) {
-                                new_job->packet->payload[4] = 'Y';
-                            } else {
-                                new_job->packet->payload[4] = 'N';
+                            for (k = 0; k < node_port_num; k++) {
+                                if(localPortTree[k] == YES) {
+                                    new_job->packet->payload[4] = 'Y';
+                                } else {
+                                    new_job->packet->payload[4] = 'N';
+                                }
+                                packet_send(node_port[k], new_job->packet);
                             }
-
+                        } else {
+                            for (k = 0; k < node_port_num; k++) {
+                                if(localPortTree[k] == YES) {
+                                    packet_send(node_port[k], new_job->packet);
+                                } else {
+                                    continue;
+                                }
+                            }
                         }
                         packet_send(node_port[k], new_job->packet);
                     }
