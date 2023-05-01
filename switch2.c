@@ -135,6 +135,7 @@ _Noreturn void switch_main(int host_id) {
                     } else {
                         localPortTree[k] = NO;
                     }
+                    free(in_packet);
                 } else {
                     // Create a new job to handle the packet
                     new_job = (struct host_job *) malloc(sizeof(struct host_job));
