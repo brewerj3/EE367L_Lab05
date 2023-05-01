@@ -108,31 +108,60 @@ _Noreturn void switch_main(int host_id) {
 
             if(n > 0) {     // If n > 0 there is a packet to process
 
-                // Create a new job to handle the packet
-                new_job = (struct host_job *) malloc(sizeof(struct host_job));
-                new_job->in_port_index = k;
-                new_job->packet = in_packet;
-                dst = (int) in_packet->dst;
+                // Process control packets
+                if(in_packet->type == (char) PKT_CONTROL_PACKET) {
+                    if(in_packet->payload[2] == 'S') {
+                        if(in_packet->payload[0] < localRootID) {
+                            localRootID = (int) in_packet->payload[0];
+                            localParent = k;
+                            localRootDist = (int) in_packet->payload[1] + 1;
+                        } else if((int) in_packet->payload[0] == localRootID) {
+                            if(localRootDist > (int) in_packet->payload[1] + 1) {
+                                localParent = k;
+                                localRootDist = (int) in_packet->payload[1] + 1;
+                            }
+                        }
+                    }
+                    if(in_packet->payload[2] == 'H') {
+                        localPortTree[k] = YES;
+                    } else if(in_packet->payload[2] == 'S') {
+                        if(localParent == k) {
+                            localPortTree[k] = YES;
+                        } else if(in_packet->payload[3] == 'Y') {
+                            localPortTree[k] = YES;
+                        } else {
+                            localPortTree[k] = NO;
+                        }
+                    } else {
+                        localPortTree[k] = NO;
+                    }
+                } else {
+                    // Create a new job to handle the packet
+                    new_job = (struct host_job *) malloc(sizeof(struct host_job));
+                    new_job->in_port_index = k;
+                    new_job->packet = in_packet;
+                    dst = (int) in_packet->dst;
 
-                // Check lookup table for the port dst;
-                if(lookupTable->isValid[dst] == True) {
-                    // The lookup table already contains the port to forward to
-                    new_job->type = JOB_FORWARD_PACKET;
-                    new_job->out_port_index = lookupTable->portNumber[dst];
-                } else if(lookupTable->isValid[dst] == False) {
-                    // The lookup table does not contain the port to forward to
-                    new_job->type = JOB_SEND_PKT_ALL_PORTS;
-                }
+                    // Check lookup table for the port dst;
+                    if (lookupTable->isValid[dst] == True) {
+                        // The lookup table already contains the port to forward to
+                        new_job->type = JOB_FORWARD_PACKET;
+                        new_job->out_port_index = lookupTable->portNumber[dst];
+                    } else if (lookupTable->isValid[dst] == False) {
+                        // The lookup table does not contain the port to forward to
+                        new_job->type = JOB_SEND_PKT_ALL_PORTS;
+                    }
 
-                // Check if a port can be added to the lookup table
-                if(lookupTable->isValid[ (int) in_packet->src] == False) {
-                    int location = (int) in_packet->src;
-                    // Add the port to the lookup table
-                    lookupTable->isValid[location] = True;
-                    lookupTable->destination[location] = location;
-                    lookupTable->portNumber[location] = new_job->in_port_index;
+                    // Check if a port can be added to the lookup table
+                    if (lookupTable->isValid[(int) in_packet->src] == False) {
+                        int location = (int) in_packet->src;
+                        // Add the port to the lookup table
+                        lookupTable->isValid[location] = True;
+                        lookupTable->destination[location] = location;
+                        lookupTable->portNumber[location] = new_job->in_port_index;
+                    }
+                    job_q_add(&job_q, new_job);
                 }
-                job_q_add(&job_q, new_job);
 
             } else {
                 free(in_packet);

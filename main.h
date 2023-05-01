@@ -50,4 +50,4 @@ struct packet { /* struct for a packet */
 // Added
 #define PKT_FILE_UPLOAD_MIDDLE  4
 #define PKT_FILE_DOWNLOAD_REQ   5
-#define PKT_CONTROL_PACKET 6
+#define PKT_CONTROL_PACKET      6
