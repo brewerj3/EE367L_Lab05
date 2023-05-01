@@ -17,6 +17,11 @@ enum host_job_type {
     JOB_FORWARD_PACKET
 };
 
+enum yesNo {
+    YES,
+    NO
+};
+
 struct host_job {
     enum host_job_type type;
     struct packet *packet;
