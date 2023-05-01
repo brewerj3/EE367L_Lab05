@@ -96,7 +96,7 @@ _Noreturn void switch_main(int host_id) {
             new_job = (struct host_job *) malloc(sizeof(struct host_job));
             new_job->packet = new_packet;
             new_job->type = JOB_SEND_PKT_ALL_PORTS;
-
+            job_q_add(&job_q, new_job);
 
         }
 
@@ -153,6 +153,14 @@ _Noreturn void switch_main(int host_id) {
                     for (k = 0; k < node_port_num; k++ ) {
                         if(k == (int) new_job->packet->src) {
                             continue;
+                        }
+                        if(new_job->packet->type == PKT_CONTROL_PACKET) {
+                            if(localPortTree[k] == YES) {
+                                new_job->packet->payload[4] = 'Y';
+                            } else {
+                                new_job->packet->payload[4] = 'N';
+                            }
+
                         }
                         packet_send(node_port[k], new_job->packet);
                     }
