@@ -27,7 +27,8 @@ _Noreturn void switch_main(int host_id) {
     int localParent = -1;           // should be node ID of parent in the tree. initially -1 because switch believes itself to be root
 
     int i, k, n;
-    int dst;    // Destination of a packet
+    int dst;                        // Destination of a packet
+    int controlCount = 0;           // Counts up to 4 then resets and sends a control packet
 
     struct packet *in_packet;       // Incoming packet
     struct packet *new_packet;
@@ -75,6 +76,30 @@ _Noreturn void switch_main(int host_id) {
     while(1) {
         // NO need to get commands from the manager
 
+        // Send control packets every 40 milliseconds
+        controlCount++;
+        if(controlCount > 4) {
+            controlCount  = 0;
+
+            // Create a control packet to send
+            new_packet = (struct packet *) malloc(sizeof(struct packet));
+            new_packet->src = (char) host_id;
+            new_packet->dst = (char) dst;
+            new_packet->type = (char) PKT_CONTROL_PACKET;
+            new_packet->length = 4;
+            new_packet->payload[0] = (char) localRootID;
+            new_packet->payload[1] = (char) localRootDist;
+            new_packet->payload[2] = 'S';
+            // set packetSenderChild when sending the packet
+
+            // Create a new job to send the control packet
+            new_job = (struct host_job *) malloc(sizeof(struct host_job));
+            new_job->packet = new_packet;
+            new_job->type = JOB_SEND_PKT_ALL_PORTS;
+
+
+        }
+
         // Scan all ports
         for( k = 0; k < node_port_num; k++) {
 
@@ -88,6 +113,7 @@ _Noreturn void switch_main(int host_id) {
                 new_job->in_port_index = k;
                 new_job->packet = in_packet;
                 dst = (int) in_packet->dst;
+
                 // Check lookup table for the port dst;
                 if(lookupTable->isValid[dst] == True) {
                     // The lookup table already contains the port to forward to
