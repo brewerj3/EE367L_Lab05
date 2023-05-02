@@ -28,8 +28,15 @@ _Noreturn void server_main(int host_id) {
 
     struct job_queue job_q;
 
+    // Create the DNS naming table
+    char namingTable[NAMING_TABLE_SIZE][MAX_NAME_LENGTH + 1];
+    // Make all entries start with the null character
+    for(i = 0; i < NAMING_TABLE_SIZE; i++) {
+        namingTable[i][0] = '\0';
+    }
+
     // Create an array node_port to store the network link ports at the host.
-    node_port_list = net_get_port_list(host_id);
+    node_port_list = net_get_port_list(100);
 
     // Count the number of network link ports
     node_port_num = 0;

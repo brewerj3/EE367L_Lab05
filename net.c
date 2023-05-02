@@ -417,8 +417,6 @@ void create_port_list() {
             p1->pipe_host_id = g_net_link[i].pipe_node0;
 
             strcpy(p0->sendDomain, g_net_link[i].sendingDomain);   // Put domain to send to into net port
-            //strcpy(p0->recvDomain, g_net_link[i].recvDomain);
-            //strcpy(p1->recvDomain, g_net_link[i].recvDomain);
             strcpy(p0->sendPortNumber, g_net_link[i].port_send);   // Put service port into net port
             strcpy(p0->recvPortNumber, g_net_link[i].port_recv);   // Port to listen on
 
@@ -446,7 +444,7 @@ int load_net_data_file() {
         return (0);
     }
 
-    int i;
+    int i, k = 0;
     int node_num;
     char node_type;
     int node_id;
@@ -472,25 +470,25 @@ int load_net_data_file() {
         for (i = 0; i < node_num; i++) {
             fscanf(fp, " %c ", &node_type);
             fscanf(fp, " %d ", &node_id);
-            if (node_type == 'H') {
+            if (node_type == 'H') {                     // Host node
                 //fscanf(fp, " %d ", &node_id);
                 g_net_node[i].type = HOST;
                 g_net_node[i].id = node_id;
-            } else if (node_type == 'S') {
+            } else if (node_type == 'S') {              // Switch node
                 //fscanf(fp, " %d ", &node_id);
                 g_net_node[i].type = SWITCH;
                 g_net_node[i].id = node_id;
+            } else if(node_type == 'D') {               // DNS server node
+                if(k != 0) {
+                    fprintf(stderr, "can only have one DNS Server\n");
+                    exit(1);
+                }
+                g_net_node[i].type = SERVER;
+                g_net_node[i].id = 100;
+                k = 1;
             } else {
                 printf(" net.c: Unidentified Node Type\n");
             }
-
-            // The below is causing problems, so it is commented out
-            /*if (i != node_id) {
-                printf(" net.c: Incorrect node id\n");
-                printf("i = %i | node_id = %i\n", i, node_id);
-                fclose(fp);
-                return (0);
-            }*/
         }
     }
     /*

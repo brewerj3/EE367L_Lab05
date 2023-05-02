@@ -5,7 +5,7 @@
 #define MAX_FILE_SIZE 1000
 
 enum NetNodeType { /* Types of network nodes */
-    HOST, SWITCH
+    HOST, SWITCH, SERVER
 };
 
 enum NetLinkType { /* Types of links */
