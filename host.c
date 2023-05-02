@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -258,12 +257,13 @@ _Noreturn void host_main(int host_id) {
     for (p = node_port_list; p != NULL; p = p->next) {
         node_port_num++;
     }
-    //printf("node_port_num = %i\n",node_port_num);
+
     /* Create memory space for the array */
     node_port = (struct net_port **) malloc(node_port_num * sizeof(struct net_port *));
 
     // Create local port tree array
     enum yesNo localPortTree[node_port_num];
+
     /* Load ports into the array */
     p = node_port_list;
 
@@ -390,7 +390,7 @@ _Noreturn void host_main(int host_id) {
 
             //printf("k = %i\n",k);
             in_packet = (struct packet *) malloc(sizeof(struct packet));
-            n = packet_recv(node_port[k], in_packet);                   // This reads incoming packets @TODO currently not getting here when host id does not start at zero
+            n = packet_recv(node_port[k], in_packet);                   // This reads incoming packets
 
             if ((n > 0) && ((int) in_packet->dst == host_id)) {
 
