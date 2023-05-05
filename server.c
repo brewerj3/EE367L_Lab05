@@ -71,6 +71,9 @@ _Noreturn void server_main(int host_id) {
             new_packet = (struct packet *) malloc(sizeof(struct packet));
             new_packet->src = (char) host_id;
             new_packet->dst = (char) dst;
+            new_packet->type = (char) PKT_CONTROL_PACKET;
+            new_packet->length = 4;
+            new_packet->payload[0] = (char) localRootID;
         }
 
     }
