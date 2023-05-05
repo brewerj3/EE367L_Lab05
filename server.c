@@ -13,9 +13,18 @@
 #include "host.h"
 
 _Noreturn void server_main(int host_id) {
+    if(host_id != 100) {
+        printf("Invalid host_id: %i\n",host_id);
+        exit(0);
+    }
+
     struct net_port *node_port_list;
     struct net_port **node_port;    // Array of pointers to node pointers
     int node_port_num;              // Number of node ports
+
+    int localRootID = host_id;
+    int localRootDist = 0;
+    int localParent = -1;
     int controlCount = 0;
 
     int i, k, n;
@@ -70,10 +79,30 @@ _Noreturn void server_main(int host_id) {
             // Create control packet
             new_packet = (struct packet *) malloc(sizeof(struct packet));
             new_packet->src = (char) host_id;
-            new_packet->dst = (char) dst;
+            new_packet->dst = (char) dst; // @TODO this is not yet set, fix this
             new_packet->type = (char) PKT_CONTROL_PACKET;
             new_packet->length = 4;
             new_packet->payload[0] = (char) localRootID;
+            new_packet->payload[1] = (char) localRootDist;
+            new_packet->payload[2] = 'D';
+            // Set packetSenderChild when sending the packet
+
+            // Create a new job to send the packet, then add to queue
+            new_job = (struct host_job *) malloc(sizeof(struct host_job));
+            new_job->packet = new_packet;
+            new_job->type = JOB_SEND_PKT_ALL_PORTS;
+            job_q_add(&job_q, new_job);
+        }
+
+        // Get packets from incoming links and translate to jobs
+        // Put jobs in job queue
+        for(k = 0; k < node_port_num; k++) {
+            in_packet = (struct packet *) malloc(sizeof(struct packet));
+            n = packet_recv(node_port[k], in_packet);
+
+            if((n > 0) && ((int) in_packet->dst == host_id)) {
+
+            }
         }
 
     }

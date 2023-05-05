@@ -286,7 +286,7 @@ _Noreturn void host_main(int host_id) {
             // Create a control packet to send
             new_packet = (struct packet *) malloc(sizeof(struct packet));
             new_packet->src = (char) host_id;
-            new_packet->dst = (char) dst;
+            new_packet->dst = (char) dst;   // @TODO this is not yet set, fix this
             new_packet->type = (char) PKT_CONTROL_PACKET;
             new_packet->length = 4;
             new_packet->payload[0] = (char) localRootID;
@@ -299,7 +299,6 @@ _Noreturn void host_main(int host_id) {
             new_job->packet = new_packet;
             new_job->type = JOB_SEND_PKT_ALL_PORTS;
             job_q_add(&job_q, new_job);
-
         }
 
         /* Execute command from manager, if any */
