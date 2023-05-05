@@ -102,7 +102,15 @@ _Noreturn void server_main(int host_id) {
 
             if((n > 0) && ((int) in_packet->dst == host_id)) {
                 // Deal with control packets
-
+                if(in_packet->type == (char) PKT_CONTROL_PACKET) {
+                    if(in_packet->payload[2] == 'S') {
+                        if(in_packet->payload[0] < localRootID) {
+                            localRootID = (int) in_packet->payload[0];
+                            localParent = k;
+                            localRootDist = (int) in_packet->payload[1] + 1;
+                        }
+                    }
+                }
             }
         }
 
