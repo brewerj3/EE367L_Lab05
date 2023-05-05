@@ -101,6 +101,7 @@ _Noreturn void server_main(int host_id) {
             n = packet_recv(node_port[k], in_packet);
 
             if((n > 0) && ((int) in_packet->dst == host_id)) {
+                // Deal with control packets
 
             }
         }
