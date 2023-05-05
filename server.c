@@ -16,6 +16,7 @@ _Noreturn void server_main(int host_id) {
     struct net_port *node_port_list;
     struct net_port **node_port;    // Array of pointers to node pointers
     int node_port_num;              // Number of node ports
+    int controlCount = 0;
 
     int i, k, n;
     int dst;                        // Packet destination
@@ -60,6 +61,17 @@ _Noreturn void server_main(int host_id) {
 
     // Start main loop
     while(1) {
+
+        // Send control packets every 40 milliseconds
+        controlCount++;
+        if(controlCount > 4) {
+            controlCount = 0;
+
+            // Create control packet
+            new_packet = (struct packet *) malloc(sizeof(struct packet));
+            new_packet->src = (char) host_id;
+            new_packet->dst = (char) dst;
+        }
 
     }
 }
