@@ -10,7 +10,7 @@ enum host_job_type {
     JOB_SEND_PKT_ALL_PORTS,
     JOB_PING_SEND_REPLY,
     JOB_REGISTER_NEW_DOMAIN,
-    JOB_REGISTER_NEW_DOMAIN_REPLY
+    JOB_DNS_PING_REQ
 };
 
 enum yesNo {

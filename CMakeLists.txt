@@ -9,7 +9,8 @@ add_executable(net367
         packet.c packet.h
         host.c host.h
         net.c net.h
-        switch2.c switch2.h)
+        switch2.c switch2.h
+        server.c server.h)
 
 file(COPY p2p.config DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY p2ps1.config DESTINATION ${CMAKE_BINARY_DIR})

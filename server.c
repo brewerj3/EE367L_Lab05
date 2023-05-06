@@ -84,7 +84,7 @@ _Noreturn void server_main(int host_id) {
 
     // Make all entries start with the null character
     for (i = 0; i < NAMING_TABLE_SIZE; i++) {
-        namingTable[i][0] = '\0';
+        memset(namingTable[i], 0, MAX_NAME_LENGTH - 1);
     }
 
     // Create an array node_port to store the network link ports at the host.
@@ -110,7 +110,8 @@ _Noreturn void server_main(int host_id) {
     // Initialize the job queue
     job_q_init(&job_q);
 
-
+    // Create register attempt response
+    enum registerAttempt successFailure;
 
     // Start main loop
     while (1) {
@@ -185,7 +186,12 @@ _Noreturn void server_main(int host_id) {
                         job_q_add(&job_q, new_job);
                         break;
                     case (char) PKT_REGISTRATION_REPLY:
-                        // @TODO return to registration requester success or failure
+                        free(in_packet);
+                        free(new_job);
+                        break;
+                    case (char) PKT_DNS_LOOKUP:
+                        new_job->type = JOB_DNS_PING_REQ;
+                        job_q_add(&job_q, new_job);
                         break;
                     default:
                         free(in_packet);
@@ -232,25 +238,91 @@ _Noreturn void server_main(int host_id) {
                     free(new_job);
                     break;
                 case JOB_REGISTER_NEW_DOMAIN:
-                    // @TODO implement this
                     // Attempt to add new Domain name to naming table
                     if(strlen(new_job->packet->payload) > MAX_NAME_LENGTH) {
-
+                        successFailure = NAME_TOO_LONG;
+                    } else if (namingTable[new_job->packet->src][0] != '\0') {
+                        successFailure = ALREADY_REGISTERED;
+                    } else {
+                        successFailure = SUCCESS;
+                        for(i = 0; i < MAX_NAME_LENGTH; i++) {
+                            if(new_job->packet->payload[i] == ' ') {
+                                successFailure = INVALID_NAME;
+                                break;
+                            }
+                        }
                     }
+                    if(successFailure == SUCCESS) {
+                        strcpy(namingTable[(int) new_job->packet->src], new_job->packet->payload);
+                    }
+
                     // Create DNS registration reply packet
                     new_packet = (struct packet *) malloc(sizeof(struct packet));
                     new_packet->dst = new_job->packet->src;
                     new_packet->src = (char) host_id;
                     new_packet->type = PKT_REGISTRATION_REPLY;
 
-                    if(new_job->packet->length > MAX_NAME_LENGTH) {
-                        // Name is too long, send fail response, reason: name too long
-                        new_packet->length = 2;
-                        strcpy(new_packet->payload, "FN");
-                    } else {
-                        // Successful DNS registration reply
+                    // Create Job for DNS reply
+                    new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
+                    new_job2->type = JOB_SEND_PKT_ALL_PORTS;
+                    new_job2->packet = new_packet;
+
+                    switch(successFailure) {
+                        case SUCCESS:
+                            new_packet->length = 1;
+                            new_packet->payload[0] = 'S';
+                            job_q_add(&job_q, new_job2);
+                            break;
+                        case NAME_TOO_LONG:
+                            new_packet->length = 2;
+                            strcpy(new_packet->payload, "FN");
+                            job_q_add(&job_q, new_job2);
+                            break;
+                        case INVALID_NAME:
+                            new_packet->length = 2;
+                            strcpy(new_packet->payload, "FI");
+                            job_q_add(&job_q, new_job2);
+                            break;
+                        case ALREADY_REGISTERED:
+                            new_packet->length = 2;
+                            strcpy(new_packet->payload, "FA");
+                            job_q_add(&job_q, new_job2);
+                            break;
+                        default:
+                            free(new_packet);
+                            free(new_job2);
                     }
 
+                    free(new_job->packet);
+                    free(new_job);
+                    break;
+                case JOB_DNS_PING_REQ:
+                    for(i = 0; i < NAMING_TABLE_SIZE; i++) {
+                        if(strcmp(new_job->packet->payload, namingTable[i]) == 0) {
+                            break;
+                        }
+                    }
+
+                    // Create reply packet
+                    new_packet = (struct packet *) malloc(sizeof(struct packet));
+                    new_packet->dst = new_job->packet->src;
+                    new_packet->src = (char) host_id;
+                    if(i > NAMING_TABLE_SIZE) {
+                        new_packet->type = PKT_DNS_LOOKUP_FAILURE;
+                        new_packet->length = 0;
+                    } else {
+                        new_packet->type = PKT_DNS_LOOKUP_SUCCESS;
+                        new_packet->length = 1;
+                        new_packet->payload[0] = (char) i;
+                    }
+
+                    // Create job for DNS lookup reply
+                    new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
+                    new_job2->type = JOB_SEND_PKT_ALL_PORTS;
+                    new_job2->packet = new_packet;
+
+                    // Add job to job queue
+                    job_q_add(&job_q, new_job2);
                     free(new_job->packet);
                     free(new_job);
                     break;
