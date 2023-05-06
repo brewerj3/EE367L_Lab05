@@ -9,12 +9,44 @@
 #include "main.h"
 #include "switch2.h"
 #include "net.h"
-#include "host.h"
 #include "packet.h"
 
-void addEntryLookupTable(struct packet *in_packet) {
-
+/* Add a job to the job queue */
+void job_q_add(struct job_queue *j_q, struct host_job *j) {
+    if (j_q->head == NULL) {
+        j_q->head = j;
+        j_q->tail = j;
+        j_q->occ = 1;
+    } else {
+        (j_q->tail)->next = j;
+        j->next = NULL;
+        j_q->tail = j;
+        j_q->occ++;
+    }
 }
+
+/* Remove job from the job queue, and return pointer to the job*/
+struct host_job *job_q_remove(struct job_queue *j_q) {
+    struct host_job *j;
+
+    if (j_q->occ == 0) return (NULL);
+    j = j_q->head;
+    j_q->head = (j_q->head)->next;
+    j_q->occ--;
+    return (j);
+}
+
+/* Initialize job queue */
+void job_q_init(struct job_queue *j_q) {
+    j_q->occ = 0;
+    j_q->head = NULL;
+    j_q->tail = NULL;
+}
+
+int job_q_num(struct job_queue *j_q) {
+    return j_q->occ;
+}
+
 
 // Job queue operations
 _Noreturn void switch_main(int host_id) {
@@ -45,7 +77,7 @@ _Noreturn void switch_main(int host_id) {
 
     // Count the number of network link ports
     node_port_num = 0;
-    for(p = node_port_list; p != NULL; p = p->next) {
+    for (p = node_port_list; p != NULL; p = p->next) {
         node_port_num++;
     }
 
@@ -57,7 +89,7 @@ _Noreturn void switch_main(int host_id) {
 
     // load ports into the array
     p = node_port_list;
-    for(k = 0; k < node_port_num; k++) {
+    for (k = 0; k < node_port_num; k++) {
         node_port[k] = p;
         p = p->next;
         localPortTree[k] = NO; // all ports are initially not in the tree
@@ -66,20 +98,20 @@ _Noreturn void switch_main(int host_id) {
     // Need to initialize the lookup table
     struct Table *lookupTable = (struct Table *) malloc(sizeof(struct Table));
     //Fill out the isValid enum
-    for(i = 0; i < MAX_LOOKUP_TABLE_SIZE; i++) {
+    for (i = 0; i < MAX_LOOKUP_TABLE_SIZE; i++) {
         lookupTable->isValid[i] = False;
     }
 
     // Initialize the job queue
     job_q_init(&job_q);
 
-    while(1) {
+    while (1) {
         // NO need to get commands from the manager
 
         // Send control packets every 40 milliseconds
         controlCount++;
-        if(controlCount > 4) {
-            controlCount  = 0;
+        if (controlCount > 4) {
+            controlCount = 0;
 
             // Create a control packet to send
             new_packet = (struct packet *) malloc(sizeof(struct packet));
@@ -101,40 +133,40 @@ _Noreturn void switch_main(int host_id) {
         }
 
         // Scan all ports
-        for( k = 0; k < node_port_num; k++) {
+        for (k = 0; k < node_port_num; k++) {
 
             in_packet = (struct packet *) malloc(sizeof(struct packet));
             n = packet_recv(node_port[k], in_packet);
 
-            if(n > 0) {     // If n > 0 there is a packet to process
+            if (n > 0) {     // If n > 0 there is a packet to process
 
                 // Process control packets
-                if(in_packet->type == (char) PKT_CONTROL_PACKET) {
-                    if(in_packet->payload[2] == 'S') {
-                        if(in_packet->payload[0] < localRootID) {
+                if (in_packet->type == (char) PKT_CONTROL_PACKET) {
+                    if (in_packet->payload[2] == 'S') {
+                        if (in_packet->payload[0] < localRootID) {
                             localRootID = (int) in_packet->payload[0];
                             localParent = k;
                             localRootDist = (int) in_packet->payload[1] + 1;
-                        } else if((int) in_packet->payload[0] == localRootID) {
-                            if(localRootDist > (int) in_packet->payload[1] + 1) {
+                        } else if ((int) in_packet->payload[0] == localRootID) {
+                            if (localRootDist > (int) in_packet->payload[1] + 1) {
                                 localParent = k;
                                 localRootDist = (int) in_packet->payload[1] + 1;
                             }
                         }
                     }
-                    if(in_packet->payload[2] == 'H') {
+                    if (in_packet->payload[2] == 'H') {
                         localPortTree[k] = YES;
-                    } else if(in_packet->payload[2] == 'D') {
+                    } else if (in_packet->payload[2] == 'D') {
                         localPortTree[k] = YES;
-                    }else if(in_packet->payload[2] == 'S') {
-                            if(localParent == k) {
-                                localPortTree[k] = YES;
-                            } else if(in_packet->payload[3] == 'Y') {
-                                localPortTree[k] = YES;
-                            } else {
-                                localPortTree[k] = NO;
-                            }
+                    } else if (in_packet->payload[2] == 'S') {
+                        if (localParent == k) {
+                            localPortTree[k] = YES;
+                        } else if (in_packet->payload[3] == 'Y') {
+                            localPortTree[k] = YES;
+                        } else {
+                            localPortTree[k] = NO;
                         }
+
                     } else {
                         localPortTree[k] = NO;
                     }
@@ -174,19 +206,19 @@ _Noreturn void switch_main(int host_id) {
         }
 
         // Execute one job in the job queue
-        if(job_q_num(&job_q) > 0) {
+        if (job_q_num(&job_q) > 0) {
 
             // Get a new job from the job queue
             new_job = job_q_remove(&job_q);
 
             // Send packets
-            switch(new_job->type) {
+            switch (new_job->type) {
                 // Send the packet on all ports
                 case JOB_SEND_PKT_ALL_PORTS:
-                    for (k = 0; k < node_port_num; k++ ) {
-                        if(new_job->packet->type == PKT_CONTROL_PACKET) {
+                    for (k = 0; k < node_port_num; k++) {
+                        if (new_job->packet->type == PKT_CONTROL_PACKET) {
                             for (k = 0; k < node_port_num; k++) {
-                                if(localPortTree[k] == YES) {
+                                if (localPortTree[k] == YES) {
                                     new_job->packet->payload[4] = 'Y';
                                 } else {
                                     new_job->packet->payload[4] = 'N';
@@ -195,7 +227,7 @@ _Noreturn void switch_main(int host_id) {
                             }
                         } else {
                             for (k = 0; k < node_port_num; k++) {
-                                if(localPortTree[k] == YES) {
+                                if (localPortTree[k] == YES) {
                                     packet_send(node_port[k], new_job->packet);
                                 } else {
                                     continue;
@@ -214,6 +246,9 @@ _Noreturn void switch_main(int host_id) {
                     free(new_job->packet);
                     free(new_job);
                     break;
+                default:
+                    free(new_job->packet);
+                    free(new_job);
             }
         }
 

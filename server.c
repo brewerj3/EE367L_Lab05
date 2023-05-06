@@ -10,7 +10,47 @@
 #include "main.h"
 #include "packet.h"
 #include "net.h"
-#include "host.h"
+
+struct name_buf {
+    char name[MAX_NAME_LENGTH];
+    int name_length;
+    int src;
+};
+
+void job_q_add(struct job_queue *j_q, struct host_job *j) {
+    if (j_q->head == NULL) {
+        j_q->head = j;
+        j_q->tail = j;
+        j_q->occ = 1;
+    } else {
+        (j_q->tail)->next = j;
+        j->next = NULL;
+        j_q->tail = j;
+        j_q->occ++;
+    }
+}
+
+/* Remove job from the job queue, and return pointer to the job*/
+struct host_job *job_q_remove(struct job_queue *j_q) {
+    struct host_job *j;
+
+    if (j_q->occ == 0) return (NULL);
+    j = j_q->head;
+    j_q->head = (j_q->head)->next;
+    j_q->occ--;
+    return (j);
+}
+
+/* Initialize job queue */
+void job_q_init(struct job_queue *j_q) {
+    j_q->occ = 0;
+    j_q->head = NULL;
+    j_q->tail = NULL;
+}
+
+int job_q_num(struct job_queue *j_q) {
+    return j_q->occ;
+}
 
 _Noreturn void server_main(int host_id) {
     if (host_id != 100) {
@@ -35,11 +75,13 @@ _Noreturn void server_main(int host_id) {
 
     struct net_port *p;
     struct host_job *new_job;
+    struct host_job *new_job2;
 
     struct job_queue job_q;
 
     // Create the DNS naming table
     char namingTable[NAMING_TABLE_SIZE][MAX_NAME_LENGTH + 1];
+
     // Make all entries start with the null character
     for (i = 0; i < NAMING_TABLE_SIZE; i++) {
         namingTable[i][0] = '\0';
@@ -67,6 +109,8 @@ _Noreturn void server_main(int host_id) {
 
     // Initialize the job queue
     job_q_init(&job_q);
+
+
 
     // Start main loop
     while (1) {
@@ -136,10 +180,11 @@ _Noreturn void server_main(int host_id) {
                         free(in_packet);
                         free(new_job);
                         break;
-                    case (char) PKT_REGISTER_DOMAIN:
-                        // @TODO make this work
+                    case (char) PKT_REGISTER_DOMAIN:    // This adds a job to register a new domain name
+                        new_job->type = JOB_REGISTER_NEW_DOMAIN;
+                        job_q_add(&job_q, new_job);
                         break;
-                    case (char) PKT_REGISTRATION_RECEIPT:
+                    case (char) PKT_REGISTRATION_REPLY:
                         // @TODO return to registration requester success or failure
                         break;
                     default:
@@ -151,5 +196,71 @@ _Noreturn void server_main(int host_id) {
             }
         }
 
+        // Execute one job in the job queue
+        if (job_q_num(&job_q) > 0) {
+
+            // Get a new job from the job queue
+            new_job = job_q_remove(&job_q);
+
+            // Process the job
+            switch (new_job->type) {
+                case JOB_SEND_PKT_ALL_PORTS:
+                    for (k = 0; k < node_port_num; k++) {
+                        packet_send(node_port[k], new_job->packet);
+                    }
+                    free(new_job->packet);
+                    free(new_job);
+                    break;
+                case JOB_PING_SEND_REPLY:
+                    /* Create ping reply packet */
+                    new_packet = (struct packet *) malloc(sizeof(struct packet));
+                    new_packet->dst = new_job->packet->src;
+                    new_packet->src = (char) host_id;
+                    new_packet->type = PKT_PING_REPLY;
+                    new_packet->length = 0;
+
+                    /* Create job for the ping reply */
+                    new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
+                    new_job2->type = JOB_SEND_PKT_ALL_PORTS;
+                    new_job2->packet = new_packet;
+
+                    /* Enter job in the job queue */
+                    job_q_add(&job_q, new_job2);
+
+                    /* Free old packet and job memory space */
+                    free(new_job->packet);
+                    free(new_job);
+                    break;
+                case JOB_REGISTER_NEW_DOMAIN:
+                    // @TODO implement this
+                    // Attempt to add new Domain name to naming table
+                    if(strlen(new_job->packet->payload) > MAX_NAME_LENGTH) {
+
+                    }
+                    // Create DNS registration reply packet
+                    new_packet = (struct packet *) malloc(sizeof(struct packet));
+                    new_packet->dst = new_job->packet->src;
+                    new_packet->src = (char) host_id;
+                    new_packet->type = PKT_REGISTRATION_REPLY;
+
+                    if(new_job->packet->length > MAX_NAME_LENGTH) {
+                        // Name is too long, send fail response, reason: name too long
+                        new_packet->length = 2;
+                        strcpy(new_packet->payload, "FN");
+                    } else {
+                        // Successful DNS registration reply
+                    }
+
+                    free(new_job->packet);
+                    free(new_job);
+                    break;
+                default:
+                    free(new_job->packet);
+                    free(new_job);
+            }
+        }
+
+        // The host goes to sleep for 10 ms
+        usleep(TENMILLISEC);
     }
 }

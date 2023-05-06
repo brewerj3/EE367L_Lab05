@@ -482,6 +482,7 @@ _Noreturn void host_main(int host_id) {
                 case JOB_SEND_PKT_ALL_PORTS:
                     if (new_job->packet->type == PKT_CONTROL_PACKET) {
                         for (k = 0; k < node_port_num; k++) {
+                            new_job->packet->src = (char) host_id;
                             packet_send(node_port[k], new_job->packet);
                         }
                     } else {
