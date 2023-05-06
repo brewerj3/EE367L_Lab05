@@ -270,7 +270,6 @@ _Noreturn void host_main(int host_id) {
     for (k = 0; k < node_port_num; k++) {
         node_port[k] = p;
         p = p->next;
-        localPortTree[k] = NO;
     }
 
 /* Initialize the job queue */
@@ -280,8 +279,8 @@ _Noreturn void host_main(int host_id) {
 
         // Send control packets every 40 milliseconds
         controlCount++;
-        if(controlCount > 4) {
-            controlCount  = 0;
+        if (controlCount > 4) {
+            controlCount = 0;
 
             // Create a control packet to send
             new_packet = (struct packet *) malloc(sizeof(struct packet));
@@ -391,102 +390,76 @@ _Noreturn void host_main(int host_id) {
             in_packet = (struct packet *) malloc(sizeof(struct packet));
             n = packet_recv(node_port[k], in_packet);                   // This reads incoming packets
 
-            if ((n > 0) && ((int) in_packet->dst == host_id)) {
+            if ((n > 0) && (in_packet->type == (char) PKT_CONTROL_PACKET)) {
+                free(in_packet);
+            } else if ((n > 0) && ((int) in_packet->dst == host_id)) {
 
-                if(in_packet->type == (char) PKT_CONTROL_PACKET) {
-                    if(in_packet->payload[2] == 'S') {
-                        if(in_packet->payload[0] < localRootID) {
-                            localRootID = (int) in_packet->payload[0];
-                            localParent = k;
-                            localRootDist = (int) in_packet->payload[1] + 1;
-                        } else if((int) in_packet->payload[0] == localRootID) {
-                            if(localRootDist > (int) in_packet->payload[1] + 1) {
-                                localParent = k;
-                                localRootDist = (int) in_packet->payload[1] + 1;
-                            }
-                        }
-                    }
-                    if(in_packet->payload[2] == 'H') {
-                        localPortTree[k] = YES;
-                    } else if(in_packet->payload[2] == 'S') {
-                        if(localParent == k) {
-                            localPortTree[k] = YES;
-                        } else if(in_packet->payload[3] == 'Y') {
-                            localPortTree[k] = YES;
-                        } else {
-                            localPortTree[k] = NO;
-                        }
-                    } else {
-                        localPortTree[k] = NO;
-                    }
-                    free(in_packet);
-                } else {
-                    new_job = (struct host_job *) malloc(sizeof(struct host_job));
-                    new_job->in_port_index = k;
-                    new_job->packet = in_packet;
-                    switch (in_packet->type) {
-                        /* Consider the packet type */
+                new_job = (struct host_job *) malloc(sizeof(struct host_job));
+                new_job->in_port_index = k;
+                new_job->packet = in_packet;
+                switch (in_packet->type) {
+                    /* Consider the packet type */
+
+                    /*
+                     * The next two packet types are
+                     * the ping request and ping reply
+                     */
+                    case (char) PKT_PING_REQ:
+                        new_job->type = JOB_PING_SEND_REPLY;
+                        job_q_add(&job_q, new_job);
+                        break;
+
+                    case (char) PKT_PING_REPLY:
+                        ping_reply_received = 1;
+                        free(in_packet);
+                        free(new_job);
+                        break;
 
                         /*
-                         * The next two packet types are
-                         * the ping request and ping reply
+                         * The next two packet types
+                         * are for the upload file operation.
+                         *
+                         * The first type is the start packet
+                         * which includes the file name in
+                         * the payload.
+                         *
+                         * The second type is the end packet
+                         * which carries the content of the file
+                         * in its payload
                          */
-                        case (char) PKT_PING_REQ:
-                            new_job->type = JOB_PING_SEND_REPLY;
-                            job_q_add(&job_q, new_job);
-                            break;
 
-                        case (char) PKT_PING_REPLY:
-                            ping_reply_received = 1;
-                            free(in_packet);
-                            free(new_job);
-                            break;
+                    case (char) PKT_FILE_UPLOAD_START:
+                        new_job->type = JOB_FILE_UPLOAD_RECV_START;
+                        job_q_add(&job_q, new_job);
+                        break;
 
-                            /*
-                             * The next two packet types
-                             * are for the upload file operation.
-                             *
-                             * The first type is the start packet
-                             * which includes the file name in
-                             * the payload.
-                             *
-                             * The second type is the end packet
-                             * which carries the content of the file
-                             * in its payload
-                             */
+                    case (char) PKT_FILE_UPLOAD_END:
+                        new_job->type = JOB_FILE_UPLOAD_RECV_END;
+                        job_q_add(&job_q, new_job);
+                        break;
 
-                        case (char) PKT_FILE_UPLOAD_START:
-                            new_job->type = JOB_FILE_UPLOAD_RECV_START;
-                            job_q_add(&job_q, new_job);
-                            break;
+                        // Added by Joshua Brewer
+                    case (char) PKT_FILE_UPLOAD_MIDDLE:         // Packet containing the middle contents of a file
+                        new_job->type = JOB_FILE_UPLOAD_RECV_MIDDLE;
+                        job_q_add(&job_q, new_job);
+                        break;
 
-                        case (char) PKT_FILE_UPLOAD_END:
-                            new_job->type = JOB_FILE_UPLOAD_RECV_END;
-                            job_q_add(&job_q, new_job);
-                            break;
+                    case (char) PKT_FILE_DOWNLOAD_REQ:           // Start a upload
+                        new_job->type = JOB_FILE_UPLOAD_SEND;
 
-                            // Added by Joshua Brewer
-                        case (char) PKT_FILE_UPLOAD_MIDDLE:         // Packet containing the middle contents of a file
-                            new_job->type = JOB_FILE_UPLOAD_RECV_MIDDLE;
-                            job_q_add(&job_q, new_job);
-                            break;
+                        for (i = 0; in_packet->payload[i] != '\0'; i++) {
+                            new_job->fname_upload[i] = in_packet->payload[i];
+                        }
+                        new_job->fname_upload[i] = '\0';
+                        new_job->file_upload_dst = (int) in_packet->src;
+                        job_q_add(&job_q, new_job);
+                        break;
 
-                        case (char) PKT_FILE_DOWNLOAD_REQ:           // Start a upload
-                            new_job->type = JOB_FILE_UPLOAD_SEND;
-
-                            for (i = 0; in_packet->payload[i] != '\0'; i++) {
-                                new_job->fname_upload[i] = in_packet->payload[i];
-                            }
-                            new_job->fname_upload[i] = '\0';
-                            new_job->file_upload_dst = (int) in_packet->src;
-                            job_q_add(&job_q, new_job);
-                            break;
-
-                        default:
-                            free(in_packet);
-                            free(new_job);
-                    }
+                    default:
+                        free(in_packet);
+                        free(new_job);
                 }
+
             } else {
                 free(in_packet);
             }
@@ -507,13 +480,13 @@ _Noreturn void host_main(int host_id) {
 
                 /* Send packets on all ports */
                 case JOB_SEND_PKT_ALL_PORTS:
-                    if(new_job->packet->type == PKT_CONTROL_PACKET) {
+                    if (new_job->packet->type == PKT_CONTROL_PACKET) {
                         for (k = 0; k < node_port_num; k++) {
                             packet_send(node_port[k], new_job->packet);
                         }
                     } else {
                         for (k = 0; k < node_port_num; k++) {
-                            if(localPortTree[k] == YES) {
+                            if (localPortTree[k] == YES) {
                                 packet_send(node_port[k], new_job->packet);
                             } else {
                                 continue;

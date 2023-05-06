@@ -124,13 +124,16 @@ _Noreturn void switch_main(int host_id) {
                     }
                     if(in_packet->payload[2] == 'H') {
                         localPortTree[k] = YES;
-                    } else if(in_packet->payload[2] == 'S') {
-                        if(localParent == k) {
-                            localPortTree[k] = YES;
-                        } else if(in_packet->payload[3] == 'Y') {
-                            localPortTree[k] = YES;
-                        } else {
-                            localPortTree[k] = NO;
+                    } else if(in_packet->payload[2] == 'D') {
+                        localPortTree[k] = YES;
+                    }else if(in_packet->payload[2] == 'S') {
+                            if(localParent == k) {
+                                localPortTree[k] = YES;
+                            } else if(in_packet->payload[3] == 'Y') {
+                                localPortTree[k] = YES;
+                            } else {
+                                localPortTree[k] = NO;
+                            }
                         }
                     } else {
                         localPortTree[k] = NO;
