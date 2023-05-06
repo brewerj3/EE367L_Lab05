@@ -48,6 +48,9 @@ char man_get_user_cmd(int curr_host) {
         printf("   (p) Ping a host\n");
         printf("   (u) Upload a file to a host\n");
         printf("   (d) Download a file from a host\n");
+        printf("   (r) Register a new Domain name with the Domain Name Server\n");
+        printf("   (l) Lookup a host with their Domain Name\n");
+        printf("   (P) Ping a host with their Domain Name\n");
         printf("   (q) Quit\n");
         printf("   Enter Command: ");
         do {
@@ -64,6 +67,9 @@ char man_get_user_cmd(int curr_host) {
             case 'u':
             case 'd':
             case 'q':
+            case 'r':
+            case'l':
+            case 'P':
                 return cmd;
             default:
                 printf("Invalid: you entered %c\n\n", cmd);
@@ -225,6 +231,8 @@ int file_download(struct man_port_at_man *curr_host) {
     write(curr_host->send_fd, msg, n);
     usleep(TENMILLISEC);
 }
+
+//int
 
 
 /*****************************
