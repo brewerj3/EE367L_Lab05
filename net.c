@@ -444,7 +444,7 @@ int load_net_data_file() {
         return (0);
     }
 
-    int i, k = 0;
+    int i;
     int node_num;
     char node_type;
     int node_id;
@@ -479,13 +479,12 @@ int load_net_data_file() {
                 g_net_node[i].type = SWITCH;
                 g_net_node[i].id = node_id;
             } else if(node_type == 'D') {               // DNS server node
-                if(k != 0) {
+                if(node_id != 100) {
                     fprintf(stderr, "can only have one DNS Server\n");
                     exit(1);
                 }
                 g_net_node[i].type = SERVER;
-                g_net_node[i].id = 100;
-                k = 1;
+                g_net_node[i].id = node_id;
             } else {
                 printf(" net.c: Unidentified Node Type\n");
             }
@@ -535,7 +534,6 @@ int load_net_data_file() {
                 strcpy(g_net_link[i].port_send, port1);         // Port to send to
 
             } else {
-                // For implementing sockets eventually
                 printf("   net.c: Unidentified link type\n");
             }
 
@@ -548,8 +546,10 @@ int load_net_data_file() {
         if (g_net_node[i].type == HOST) {
             printf("   Node %d HOST\n", g_net_node[i].id);
         } else if (g_net_node[i].type == SWITCH) {
-            printf(" SWITCH\n");
-        } else {
+            printf("   Node %d Switch\n",g_net_node[i].id);
+        } else if(g_net_node[i].type == SERVER){
+            printf("   Node %d Domain Name Server\n",g_net_node[i].id);
+        }else {
             printf(" Unknown Type\n");
         }
     }
