@@ -232,7 +232,19 @@ int file_download(struct man_port_at_man *curr_host) {
     usleep(TENMILLISEC);
 }
 
-//int
+void dns_register(struct man_port_at_man *curr_host) {
+    int n;
+    char domainName[NAME_LENGTH];
+    char msg[NAME_LENGTH];
+
+    printf("Enter name to register with DNS: ");
+    scanf("%s", domainName);
+    printf("\n");
+
+    n = sprintf(msg, "r %s",domainName);
+    write(curr_host->send_fd, msg, n);
+    usleep(TENMILLISEC);
+}
 
 
 /*****************************
@@ -276,6 +288,9 @@ void man_main() {
                 break;
             case 'd': /* Download a file from a host */
                 file_download(curr_host);
+                break;
+            case 'r': // Register with a domain name
+                dns_register(curr_host);
                 break;
             case 'q':  /* Quit */
                 return;
