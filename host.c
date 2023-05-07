@@ -211,6 +211,7 @@ _Noreturn void host_main(int host_id) {
     int dns_register_received;
     int dns_lookup_received;
     int dns_ping_received;
+    int dnsLookupResponse;
 
     int localRootID = host_id;
     int localRootDist = 0;
@@ -222,6 +223,12 @@ _Noreturn void host_main(int host_id) {
     char name[MAX_FILE_NAME];
     char string[PKT_PAYLOAD_MAX + 1];
     char buffer[MAX_FILE_BUFFER + 1];
+    char dnsRegisterBuffer[MAX_MSG_LENGTH + 1];
+    memset(dnsRegisterBuffer, 0, MAX_MSG_LENGTH + 1);
+    dnsRegisterBuffer[0] = '\0';
+    char dnsLookupBuffer[MAX_MSG_LENGTH + 1];
+    memset(dnsLookupBuffer, 0 ,MAX_MSG_LENGTH + 1);
+    dnsLookupBuffer[0] = '\0';
 
     FILE *fp;
 
@@ -398,7 +405,7 @@ _Noreturn void host_main(int host_id) {
                     new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
                     dns_register_received = 0;
                     new_job2->type = JOB_DNS_REGISTER_WAIT_FOR_REPLY;
-                    new_job2->ping_timer = 10;
+                    new_job2->ping_timer = 20;
                     job_q_add(&job_q, new_job2);
                     break;
                 case 'l':
@@ -534,11 +541,16 @@ _Noreturn void host_main(int host_id) {
                         job_q_add(&job_q, new_job);
                         break;
                     case (char) PKT_DNS_REGISTER_REPLY:
-                        // @TODO Implement this
+                        dns_register_received = 1;
+                        strcpy(dnsRegisterBuffer, in_packet->payload);
+                        free(in_packet);
+                        free(new_job);
                         break;
                     case (char) PKT_DNS_LOOKUP_REPLY:
-                        // @TODO Implement this
-
+                        dns_register_received = 1;
+                        strcpy(dnsLookupBuffer, in_packet->payload);
+                        free(in_packet);
+                        free(new_job);
                         break;
                     default:
                         free(in_packet);
@@ -795,6 +807,71 @@ _Noreturn void host_main(int host_id) {
 
                             fclose(fp);
                         }
+                    }
+                    break;
+                case JOB_DNS_REGISTER_WAIT_FOR_REPLY:
+                    // Wait for the DNS registration to reply
+                    if(dns_register_received == 1) {
+                        if(strncmp(dnsRegisterBuffer, "S", 1) == 0) {
+                            n = sprintf(man_reply_msg, "Successfully registered domain name");
+                            man_reply_msg[n] = '\0';
+                            write(man_port->send_fd, man_reply_msg, n + 1);
+                            free(new_job);
+                        } else if(strncmp(dnsRegisterBuffer, "FN", 2) == 0) {
+                            n = sprintf(man_reply_msg, "Failed to register: Name too long");
+                            man_reply_msg[n] = '\0';
+                            write(man_port->send_fd, man_reply_msg, n + 1);
+                            free(new_job);
+                        } else if(strncmp(dnsRegisterBuffer, "FI", 2) == 0) {
+                            n = sprintf(man_reply_msg, "Failed to register: Name is Invalid");
+                            man_reply_msg[n] = '\0';
+                            write(man_port->send_fd, man_reply_msg, n + 1);
+                            free(new_job);
+                        } else if(strncmp(man_reply_msg, "FA", 2) == 0) {
+                            n = sprintf(man_reply_msg, "Failed to register: Already registered");
+                            man_reply_msg[n] = '\0';
+                            write(man_port->send_fd, man_reply_msg, n + 1);
+                            free(new_job);
+                        } else {
+                            n = sprintf(man_reply_msg, "Failed to parse register response");
+                            man_reply_msg[n] = '\0';
+                            write(man_port->send_fd, man_reply_msg, n + 1);
+                            free(new_job);
+                        }
+                        memset(dnsRegisterBuffer, 0, MAX_MSG_LENGTH);
+                    } else if(new_job->ping_timer > 1) {
+                        new_job->ping_timer--;
+                        job_q_add(&job_q, new_job);
+                    } else { /* Time out */
+                        n = sprintf(man_reply_msg, "Registration time out!");
+                        man_reply_msg[n] = '\0';
+                        write(man_port->send_fd, man_reply_msg, n + 1);
+                        free(new_job);
+                    }
+                    break;
+                case JOB_DNS_LOOKUP_WAIT_FOR_REPLY:
+                    if(dns_lookup_received == 1) {
+                        if(strncmp(dnsLookupBuffer, "FAIL", 1) == 0) {
+                            n = sprintf(man_reply_msg, "DNS lookup failed");
+                            man_reply_msg[n] = '\0';
+                            write(man_port->send_fd, man_reply_msg, n + 1);
+                            free(new_job);
+                        } else {
+                            dnsLookupResponse = (int) dnsLookupBuffer[0];
+                            n = sprintf(man_reply_msg, "DNS lookup response %i",dnsLookupResponse);
+                            man_reply_msg[n] = '\0';
+                            write(man_port->send_fd, man_reply_msg, n + 1);
+                            free(new_job);
+                        }
+                        memset(dnsLookupBuffer, 0, MAX_MSG_LENGTH);
+                    } else if(new_job->ping_timer > 1) {
+                        new_job->ping_timer--;
+                        job_q_add(&job_q, new_job);
+                    } else { /* Time out */
+                        n = sprintf(man_reply_msg, "Registration time out!");
+                        man_reply_msg[n] = '\0';
+                        write(man_port->send_fd, man_reply_msg, n + 1);
+                        free(new_job);
                     }
                     break;
             }

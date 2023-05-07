@@ -180,11 +180,11 @@ _Noreturn void server_main(int host_id) {
                         free(in_packet);
                         free(new_job);
                         break;
-                    case (char) PKT_REGISTER_DOMAIN:    // This adds a job to register a new domain name
+                    case (char) PKT_DNS_REGISTER:    // This adds a job to register a new domain name
                         new_job->type = JOB_REGISTER_NEW_DOMAIN;
                         job_q_add(&job_q, new_job);
                         break;
-                    case (char) PKT_REGISTRATION_REPLY:
+                    case (char) PKT_DNS_REGISTER_REPLY:
                         free(in_packet);
                         free(new_job);
                         break;
@@ -259,7 +259,7 @@ _Noreturn void server_main(int host_id) {
                     new_packet = (struct packet *) malloc(sizeof(struct packet));
                     new_packet->dst = new_job->packet->src;
                     new_packet->src = (char) host_id;
-                    new_packet->type = PKT_REGISTRATION_REPLY;
+                    new_packet->type = PKT_DNS_REGISTER_REPLY;
 
                     // Create Job for DNS reply
                     new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
@@ -269,22 +269,22 @@ _Noreturn void server_main(int host_id) {
                     switch(successFailure) {
                         case SUCCESS:
                             new_packet->length = 1;
-                            new_packet->payload[0] = 'S';
+                            strcpy(new_packet->payload, "S\0");
                             job_q_add(&job_q, new_job2);
                             break;
                         case NAME_TOO_LONG:
                             new_packet->length = 2;
-                            strcpy(new_packet->payload, "FN");
+                            strcpy(new_packet->payload, "FN\0");
                             job_q_add(&job_q, new_job2);
                             break;
                         case INVALID_NAME:
                             new_packet->length = 2;
-                            strcpy(new_packet->payload, "FI");
+                            strcpy(new_packet->payload, "FI\0");
                             job_q_add(&job_q, new_job2);
                             break;
                         case ALREADY_REGISTERED:
                             new_packet->length = 2;
-                            strcpy(new_packet->payload, "FA");
+                            strcpy(new_packet->payload, "FA\0");
                             job_q_add(&job_q, new_job2);
                             break;
                         default:
@@ -308,8 +308,8 @@ _Noreturn void server_main(int host_id) {
                     new_packet->src = (char) host_id;
                     new_packet->type = PKT_DNS_LOOKUP_REPLY;
                     if(i > NAMING_TABLE_SIZE) {
-                        new_packet->length = 1;
-                        new_packet->payload[0] = 'F';
+                        new_packet->length = 5;
+                        strcpy(new_packet->payload, "FAIL\0");
                     } else {
                         new_packet->length = 1;
                         new_packet->payload[0] = (char) i;
