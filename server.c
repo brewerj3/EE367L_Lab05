@@ -124,7 +124,6 @@ _Noreturn void server_main(int host_id) {
             // Create control packet
             new_packet = (struct packet *) malloc(sizeof(struct packet));
             new_packet->src = (char) host_id;
-            new_packet->dst = (char) dst; // @TODO this is not yet set, fix this
             new_packet->type = (char) PKT_CONTROL_PACKET;
             new_packet->length = 4;
             new_packet->payload[0] = (char) localRootID;
@@ -307,11 +306,11 @@ _Noreturn void server_main(int host_id) {
                     new_packet = (struct packet *) malloc(sizeof(struct packet));
                     new_packet->dst = new_job->packet->src;
                     new_packet->src = (char) host_id;
+                    new_packet->type = PKT_DNS_LOOKUP_REPLY;
                     if(i > NAMING_TABLE_SIZE) {
-                        new_packet->type = PKT_DNS_LOOKUP_FAILURE;
-                        new_packet->length = 0;
+                        new_packet->length = 1;
+                        new_packet->payload[0] = 'F';
                     } else {
-                        new_packet->type = PKT_DNS_LOOKUP_SUCCESS;
                         new_packet->length = 1;
                         new_packet->payload[0] = (char) i;
                     }

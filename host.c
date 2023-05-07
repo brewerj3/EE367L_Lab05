@@ -288,7 +288,6 @@ _Noreturn void host_main(int host_id) {
             // Create a control packet to send
             new_packet = (struct packet *) malloc(sizeof(struct packet));
             new_packet->src = (char) host_id;
-            new_packet->dst = (char) dst;   // @TODO this is not yet set, fix this
             new_packet->type = (char) PKT_CONTROL_PACKET;
             new_packet->length = 4;
             new_packet->payload[0] = (char) localRootID;
@@ -382,7 +381,7 @@ _Noreturn void host_main(int host_id) {
                     new_packet = (struct packet *) malloc(sizeof(struct packet));
                     new_packet->src = (char) host_id;
                     new_packet->dst = 100;  // DNS server always has id 100
-                    new_packet->type = (char) PKT_REGISTER_DOMAIN;
+                    new_packet->type = (char) PKT_DNS_REGISTER;
                     for (i = 0; name[i] != '\0'; i++) {
                         new_packet->payload[i] = name[i];
                     }
@@ -467,7 +466,6 @@ _Noreturn void host_main(int host_id) {
 
         for (k = 0; k < node_port_num; k++) { /* Scan all ports */
 
-            //printf("k = %i\n",k);
             in_packet = (struct packet *) malloc(sizeof(struct packet));
             n = packet_recv(node_port[k], in_packet);                   // This reads incoming packets
 
@@ -535,7 +533,13 @@ _Noreturn void host_main(int host_id) {
                         new_job->file_upload_dst = (int) in_packet->src;
                         job_q_add(&job_q, new_job);
                         break;
+                    case (char) PKT_DNS_REGISTER_REPLY:
+                        // @TODO Implement this
+                        break;
+                    case (char) PKT_DNS_LOOKUP_REPLY:
+                        // @TODO Implement this
 
+                        break;
                     default:
                         free(in_packet);
                         free(new_job);
