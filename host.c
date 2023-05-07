@@ -431,6 +431,7 @@ _Noreturn void host_main(int host_id) {
                     // Create a second job to wait for reply
                     new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
                     dns_lookup_received = 0;
+                    strcpy(new_job2->fname_download, name);
                     new_job2->type = JOB_DNS_LOOKUP_WAIT_FOR_REPLY;
                     new_job2->ping_timer = 10;
                     job_q_add(&job_q, new_job2);
@@ -843,7 +844,7 @@ _Noreturn void host_main(int host_id) {
                         new_job->ping_timer--;
                         job_q_add(&job_q, new_job);
                     } else { /* Time out */
-                        n = sprintf(man_reply_msg, "Registration time out!");
+                        n = sprintf(man_reply_msg, "DNS registration time out!");
                         man_reply_msg[n] = '\0';
                         write(man_port->send_fd, man_reply_msg, n + 1);
                         free(new_job);
@@ -868,7 +869,7 @@ _Noreturn void host_main(int host_id) {
                         new_job->ping_timer--;
                         job_q_add(&job_q, new_job);
                     } else { /* Time out */
-                        n = sprintf(man_reply_msg, "Registration time out!");
+                        n = sprintf(man_reply_msg, "DNS lookup time out!");
                         man_reply_msg[n] = '\0';
                         write(man_port->send_fd, man_reply_msg, n + 1);
                         free(new_job);
