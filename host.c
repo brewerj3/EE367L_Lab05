@@ -853,13 +853,13 @@ _Noreturn void host_main(int host_id) {
                 case JOB_DNS_LOOKUP_WAIT_FOR_REPLY:
                     if(dns_lookup_received == 1) {
                         if(strncmp(dnsLookupBuffer, "FAIL", 1) == 0) {
-                            n = sprintf(man_reply_msg, "DNS lookup failed");
+                            n = sprintf(man_reply_msg, "DNS lookup failed.");
                             man_reply_msg[n] = '\0';
                             write(man_port->send_fd, man_reply_msg, n + 1);
                             free(new_job);
                         } else {
                             dnsLookupResponse = (int) dnsLookupBuffer[0];
-                            n = sprintf(man_reply_msg, "DNS lookup response %i",dnsLookupResponse);
+                            n = sprintf(man_reply_msg, "DNS lookup response %i.",dnsLookupResponse);
                             man_reply_msg[n] = '\0';
                             write(man_port->send_fd, man_reply_msg, n + 1);
                             free(new_job);
