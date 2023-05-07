@@ -208,6 +208,9 @@ _Noreturn void host_main(int host_id) {
     int node_port_num;            // Number of node ports
 
     int ping_reply_received;
+    int dns_register_received;
+    int dns_lookup_received;
+    int dns_ping_received;
 
     int localRootID = host_id;
     int localRootDist = 0;
@@ -338,7 +341,6 @@ _Noreturn void host_main(int host_id) {
                     new_job2->type = JOB_PING_WAIT_FOR_REPLY;
                     new_job2->ping_timer = 10;
                     job_q_add(&job_q, new_job2);
-
                     break;
 
                 case 'u': /* Upload a file to a host */
@@ -372,7 +374,86 @@ _Noreturn void host_main(int host_id) {
                     new_job->packet = new_packet;
                     new_job->type = JOB_SEND_PKT_ALL_PORTS;
                     job_q_add(&job_q, new_job);
+                    break;
+                case 'r':   // Register a domain name with the DNS server
+                    sscanf(man_msg, "%s", name);
 
+                    // Create a new packet
+                    new_packet = (struct packet *) malloc(sizeof(struct packet));
+                    new_packet->src = (char) host_id;
+                    new_packet->dst = 100;  // DNS server always has id 100
+                    new_packet->type = (char) PKT_REGISTER_DOMAIN;
+                    for (i = 0; name[i] != '\0'; i++) {
+                        new_packet->payload[i] = name[i];
+                    }
+                    new_packet->payload[i] = '\0';
+                    new_packet->length = i;
+
+                    // Create a job to send the packet
+                    new_job = (struct host_job *) malloc(sizeof(struct host_job));
+                    new_job->packet = new_packet;
+                    new_job->type = JOB_SEND_PKT_ALL_PORTS;
+                    job_q_add(&job_q, new_job);
+
+                    // Create a second job to wait for reply
+                    new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
+                    dns_register_received = 0;
+                    new_job2->type = JOB_DNS_REGISTER_WAIT_FOR_REPLY;
+                    new_job2->ping_timer = 10;
+                    job_q_add(&job_q, new_job2);
+                    break;
+                case 'l':
+                    sscanf(man_msg, "%s", name);
+
+                    // Create a new packet
+                    new_packet = (struct packet *) malloc(sizeof(struct packet));
+                    new_packet->src = (char) host_id;
+                    new_packet->dst = 100;  // DNS server always has id 100
+                    new_packet->type = (char) PKT_DNS_LOOKUP;
+                    for (i = 0; name[i] != '\0'; i++) {
+                        new_packet->payload[i] = name[i];
+                    }
+                    new_packet->payload[i] = '\0';
+                    new_packet->length = i;
+
+                    // Create a job to send the packet
+                    new_job = (struct host_job *) malloc(sizeof(struct host_job));
+                    new_job->packet = new_packet;
+                    new_job->type = JOB_SEND_PKT_ALL_PORTS;
+                    job_q_add(&job_q, new_job);
+
+                    // Create a second job to wait for reply
+                    new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
+                    dns_lookup_received = 0;
+                    new_job2->type = JOB_DNS_LOOKUP_WAIT_FOR_REPLY;
+                    new_job2->ping_timer = 10;
+                    job_q_add(&job_q, new_job2);
+                    break;
+                case 'P':
+                    sscanf(man_msg, "%s", name);
+                    // Create a new packet
+                    new_packet = (struct packet *) malloc(sizeof(struct packet));
+                    new_packet->src = (char) host_id;
+                    new_packet->dst = 100;  // DNS server always has id 100
+                    new_packet->type = (char) PKT_DNS_LOOKUP;
+                    for (i = 0; name[i] != '\0'; i++) {
+                        new_packet->payload[i] = name[i];
+                    }
+                    new_packet->payload[i] = '\0';
+                    new_packet->length = i;
+
+                    // Create a job to send the packet
+                    new_job = (struct host_job *) malloc(sizeof(struct host_job));
+                    new_job->packet = new_packet;
+                    new_job->type = JOB_SEND_PKT_ALL_PORTS;
+                    job_q_add(&job_q, new_job);
+
+                    // Create a second job to wait for reply
+                    new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
+                    dns_ping_received = 0;
+                    new_job2->type = JOB_DNS_PING_WAIT_FOR_REPLY;
+                    new_job2->ping_timer = 10;
+                    job_q_add(&job_q, new_job2);
                     break;
 
                 default:;
@@ -540,15 +621,12 @@ _Noreturn void host_main(int host_id) {
                         write(man_port->send_fd, man_reply_msg, n + 1);
                         free(new_job);
                     }
-
                     break;
-
 
                     /* The next three jobs deal with uploading a file */
 
                     /* This job is for the sending host */
                 case JOB_FILE_UPLOAD_SEND:
-
                     /* Open file */
                     if (dir_valid == 1) {
                         n = sprintf(name, "./%s/%s", dir, new_job->fname_upload);
@@ -714,7 +792,6 @@ _Noreturn void host_main(int host_id) {
                             fclose(fp);
                         }
                     }
-
                     break;
             }
         }

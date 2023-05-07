@@ -50,9 +50,11 @@ struct packet { /* struct for a packet */
 // Added
 #define PKT_FILE_UPLOAD_MIDDLE  4
 #define PKT_FILE_DOWNLOAD_REQ   5
+
 #define PKT_CONTROL_PACKET      6
 #define PKT_REGISTER_DOMAIN     7
 #define PKT_REGISTRATION_REPLY  8
+
 #define PKT_DNS_LOOKUP          9
 #define PKT_DNS_LOOKUP_SUCCESS  10
 #define PKT_DNS_LOOKUP_FAILURE  11

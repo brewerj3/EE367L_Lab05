@@ -68,7 +68,7 @@ char man_get_user_cmd(int curr_host) {
             case 'd':
             case 'q':
             case 'r':
-            case'l':
+            case 'l':
             case 'P':
                 return cmd;
             default:
@@ -241,9 +241,53 @@ void dns_register(struct man_port_at_man *curr_host) {
     scanf("%s", domainName);
     printf("\n");
 
-    n = sprintf(msg, "r %s",domainName);
+    n = sprintf(msg, "r %s", domainName);
     write(curr_host->send_fd, msg, n);
     usleep(TENMILLISEC);
+}
+
+void dns_lookup(struct man_port_at_man *curr_host) {
+    int n;
+    char domainName[NAME_LENGTH];
+    char msg[MAN_MSG_LENGTH];
+    char reply[MAN_MSG_LENGTH];
+
+    printf("Enter name to lookup with DNS: ");
+    scanf("%s", domainName);
+    printf("\n");
+
+    n = sprintf(msg, "l %s", domainName);
+    write(curr_host->send_fd, msg, n);
+
+    n = 0;
+    while (n <= 0) {
+        usleep(TENMILLISEC);
+        n = read(curr_host->recv_fd, reply, MAN_MSG_LENGTH);
+    }
+    reply[n] = '\0';
+    printf("%s\n", reply);
+}
+
+void dns_ping(struct man_port_at_man *curr_host) {
+    int n;
+    char domainName[NAME_LENGTH];
+    char msg[MAN_MSG_LENGTH];
+    char reply[MAN_MSG_LENGTH];
+
+    printf("Enter name to lookup with DNS: ");
+    scanf("%s", domainName);
+    printf("\n");
+
+    n = sprintf(msg, "P %s", domainName);
+    write(curr_host->send_fd, msg, n);
+
+    n = 0;
+    while (n <= 0) {
+        usleep(TENMILLISEC);
+        n = read(curr_host->recv_fd, reply, MAN_MSG_LENGTH);
+    }
+    reply[n] = '\0';
+    printf("%s\n", reply);
 }
 
 
@@ -291,6 +335,12 @@ void man_main() {
                 break;
             case 'r': // Register with a domain name
                 dns_register(curr_host);
+                break;
+            case 'l': // Lookup a host id with a domain name
+                dns_lookup(curr_host);
+                break;
+            case 'P': // ping a host with a domain name
+                dns_ping(curr_host);
                 break;
             case 'q':  /* Quit */
                 return;
