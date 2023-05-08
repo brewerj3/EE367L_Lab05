@@ -16,7 +16,8 @@ enum host_job_type {
     JOB_FILE_UPLOAD_RECV_MIDDLE,
     JOB_DNS_REGISTER_WAIT_FOR_REPLY,
     JOB_DNS_LOOKUP_WAIT_FOR_REPLY,  // Should be different response from the next job
-    JOB_DNS_PING_WAIT_FOR_REPLY
+    JOB_DNS_PING_WAIT_FOR_REPLY,
+    JOB_DNS_DOWNLOAD_WAIT_FOR_REPLY
 };
 
 enum yesNo {

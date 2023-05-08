@@ -20,6 +20,7 @@
 #define MAX_DIR_NAME 100
 #define MAX_FILE_NAME 100
 #define PKT_PAYLOAD_MAX 100
+#define MAX_DOMAIN_NAME 50
 
 /* Types of packets */
 
@@ -219,13 +220,14 @@ _Noreturn void host_main(int host_id) {
     int i, k, n;
     int dst;
     char name[MAX_FILE_NAME];
+    char domainName[MAX_DOMAIN_NAME];
     char string[PKT_PAYLOAD_MAX + 1];
     char buffer[MAX_FILE_BUFFER + 1];
-    char dnsRegisterBuffer[MAX_MSG_LENGTH + 1];
-    memset(dnsRegisterBuffer, 0, MAX_MSG_LENGTH + 1);
+    char dnsRegisterBuffer[MAX_DOMAIN_NAME + 1];
+    memset(dnsRegisterBuffer, 0, MAX_DOMAIN_NAME + 1);
     dnsRegisterBuffer[0] = '\0';
-    char dnsLookupBuffer[MAX_MSG_LENGTH + 1];
-    memset(dnsLookupBuffer, 0 ,MAX_MSG_LENGTH + 1);
+    char dnsLookupBuffer[MAX_DOMAIN_NAME + 1];
+    memset(dnsLookupBuffer, 0 ,MAX_DOMAIN_NAME + 1);
     dnsLookupBuffer[0] = '\0';
 
     FILE *fp;
@@ -380,15 +382,15 @@ _Noreturn void host_main(int host_id) {
                     job_q_add(&job_q, new_job);
                     break;
                 case 'r':   // Register a domain name with the DNS server
-                    sscanf(man_msg, "%s", name);
+                    sscanf(man_msg, "%s", domainName);
 
                     // Create a new packet
                     new_packet = (struct packet *) malloc(sizeof(struct packet));
                     new_packet->src = (char) host_id;
                     new_packet->dst = 100;  // DNS server always has id 100
                     new_packet->type = (char) PKT_DNS_REGISTER;
-                    for (i = 0; name[i] != '\0'; i++) {
-                        new_packet->payload[i] = name[i];
+                    for (i = 0; domainName[i] != '\0'; i++) {
+                        new_packet->payload[i] = domainName[i];
                     }
                     new_packet->payload[i] = '\0';
                     new_packet->length = i;
@@ -402,21 +404,21 @@ _Noreturn void host_main(int host_id) {
                     // Create a second job to wait for reply
                     new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
                     dns_register_received = 0;
-                    memset(dnsRegisterBuffer, 0, MAX_MSG_LENGTH);
+                    memset(dnsRegisterBuffer, 0, MAX_DOMAIN_NAME);
                     new_job2->type = JOB_DNS_REGISTER_WAIT_FOR_REPLY;
                     new_job2->ping_timer = 20;
                     job_q_add(&job_q, new_job2);
                     break;
                 case 'l':   // lookup a host id by their hostname
-                    sscanf(man_msg, "%s", name);
+                    sscanf(man_msg, "%s", domainName);
 
                     // Create a new packet
                     new_packet = (struct packet *) malloc(sizeof(struct packet));
                     new_packet->src = (char) host_id;
                     new_packet->dst = 100;  // DNS server always has id 100
                     new_packet->type = (char) PKT_DNS_LOOKUP;
-                    for (i = 0; name[i] != '\0'; i++) {
-                        new_packet->payload[i] = name[i];
+                    for (i = 0; domainName[i] != '\0'; i++) {
+                        new_packet->payload[i] = domainName[i];
                     }
                     new_packet->payload[i] = '\0';
                     new_packet->length = i;
@@ -430,21 +432,21 @@ _Noreturn void host_main(int host_id) {
                     // Create a second job to wait for reply
                     new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
                     dns_lookup_received = 0;
-                    memset(dnsLookupBuffer, 0, MAX_MSG_LENGTH);
-                    strcpy(new_job2->fname_download, name);
+                    memset(dnsLookupBuffer, 0, MAX_DOMAIN_NAME);
+                    strcpy(new_job2->fname_download, domainName);
                     new_job2->type = JOB_DNS_LOOKUP_WAIT_FOR_REPLY;
                     new_job2->ping_timer = 10;
                     job_q_add(&job_q, new_job2);
                     break;
                 case 'P':   // Ping a host by their domain name
-                    sscanf(man_msg, "%s", name);
+                    sscanf(man_msg, "%s", domainName);
                     // Create a new packet
                     new_packet = (struct packet *) malloc(sizeof(struct packet));
                     new_packet->src = (char) host_id;
                     new_packet->dst = 100;  // DNS server always has id 100
                     new_packet->type = (char) PKT_DNS_LOOKUP;
-                    for (i = 0; name[i] != '\0'; i++) {
-                        new_packet->payload[i] = name[i];
+                    for (i = 0; domainName[i] != '\0'; i++) {
+                        new_packet->payload[i] = domainName[i];
                     }
                     new_packet->payload[i] = '\0';
                     new_packet->length = i;
@@ -462,7 +464,34 @@ _Noreturn void host_main(int host_id) {
                     new_job2->ping_timer = 10;
                     job_q_add(&job_q, new_job2);
                     break;
+                case 'D':   // Download from a host by giving their domain name
+                    sscanf(man_msg, "%s %s", domainName, name);
 
+                    // Create a packet to lookup their domain name
+                    new_packet = (struct packet *) malloc(sizeof(struct packet));
+                    new_packet->src = (char) host_id;
+                    new_packet->dst = 100;  // DNS server always has id 100
+                    new_packet->type = (char) PKT_DNS_LOOKUP;
+                    for (i = 0; domainName[i] != '\0'; i++) {
+                        new_packet->payload[i] = domainName[i];
+                    }
+                    new_packet->payload[i] = '\0';
+                    new_packet->length = i;
+
+                    // Create a job to send the packet
+                    new_job = (struct host_job *) malloc(sizeof(struct host_job));
+                    new_job->packet = new_packet;
+                    new_job->type = JOB_SEND_PKT_ALL_PORTS;
+                    job_q_add(&job_q, new_job);
+
+                    // Create a second job to wait for reply
+                    new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
+                    dns_lookup_received = 0;
+                    strcpy(new_job2->fname_download, domainName);
+                    new_job2->type = JOB_DNS_DOWNLOAD_WAIT_FOR_REPLY;
+                    new_job2->ping_timer = 10;
+                    job_q_add(&job_q, new_job2);
+                    break;
                 default:;
             }
         }
@@ -826,7 +855,7 @@ _Noreturn void host_main(int host_id) {
                             write(man_port->send_fd, man_reply_msg, n + 1);
                             free(new_job);
                         }
-                        memset(dnsRegisterBuffer, 0, MAX_MSG_LENGTH);
+                        memset(dnsRegisterBuffer, 0, MAX_DOMAIN_NAME);
                     } else if(new_job->ping_timer > 1) {
                         new_job->ping_timer--;
                         job_q_add(&job_q, new_job);
@@ -851,7 +880,7 @@ _Noreturn void host_main(int host_id) {
                             write(man_port->send_fd, man_reply_msg, n + 1);
                             free(new_job);
                         }
-                        memset(dnsLookupBuffer, 0, MAX_MSG_LENGTH);
+                        memset(dnsLookupBuffer, 0, MAX_DOMAIN_NAME);
                     } else if(new_job->ping_timer > 1) {
                         new_job->ping_timer--;
                         job_q_add(&job_q, new_job);
@@ -896,7 +925,50 @@ _Noreturn void host_main(int host_id) {
                             new_job2->ping_timer = 10;
                             job_q_add(&job_q, new_job2);
                         }
-                        memset(dnsLookupBuffer, 0, MAX_MSG_LENGTH);
+                        memset(dnsLookupBuffer, 0, MAX_DOMAIN_NAME);
+                        dns_lookup_received = 0;
+                    } else if(new_job->ping_timer > 1) {
+                        new_job->ping_timer--;
+                        job_q_add(&job_q, new_job);
+                    } else { /* Time out */
+                        n = sprintf(man_reply_msg, "DNS lookup time out!");
+                        man_reply_msg[n] = '\0';
+                        write(man_port->send_fd, man_reply_msg, n + 1);
+                        free(new_job);
+                    }
+                    break;
+                case JOB_DNS_DOWNLOAD_WAIT_FOR_REPLY:
+                    if(dns_lookup_received == 1) {
+                        if(strncmp(dnsLookupBuffer, "FAIL", 4) == 0) {
+                            n = sprintf(man_reply_msg, "DNS lookup failed.");
+                            man_reply_msg[n] = '\0';
+                            write(man_port->send_fd, man_reply_msg, n + 1);
+                            free(new_job);
+                        } else {
+                            // download from host using returned host id
+                            dnsLookupResponse = (int) dnsLookupBuffer[0];
+
+                            // Create new packet to request download
+                            new_packet = (struct packet *) malloc(sizeof(struct packet));
+                            new_packet->src = (char) host_id;
+                            new_packet->dst = (char) dnsLookupResponse;
+                            new_packet->type = (char) PKT_FILE_DOWNLOAD_REQ;
+                            for (i = 0; new_job->fname_download[i] != '\0'; i++) {
+                                new_packet->payload[i] = new_job->fname_download[i];
+                            }
+                            new_packet->payload[i] = '\0';
+                            new_packet->length = i;
+
+                            // Free JOB_DNS_DOWNLOAD_WAIT_FOR_REPLY
+                            free(new_job);
+
+                            // Create job to send ping request
+                            new_job = (struct host_job *) malloc(sizeof(struct host_job));
+                            new_job->packet = new_packet;
+                            new_job->type = JOB_SEND_PKT_ALL_PORTS;
+                            job_q_add(&job_q, new_job);
+                        }
+                        memset(dnsLookupBuffer, 0, MAX_DOMAIN_NAME);
                         dns_lookup_received = 0;
                     } else if(new_job->ping_timer > 1) {
                         new_job->ping_timer--;
