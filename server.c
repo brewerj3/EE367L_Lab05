@@ -88,8 +88,8 @@ _Noreturn void server_main(int host_id) {
     int localRootDist = 0;
     int controlCount = 0;
 
-    int i, k, n;
-    int dst;                        // Packet destination
+    int i, k, n, j;
+    int dnsHostIDReturn;
 
     struct packet *in_packet;
     struct packet *new_packet;
@@ -102,10 +102,12 @@ _Noreturn void server_main(int host_id) {
 
     // Create the DNS naming table
     char namingTable[NAMING_TABLE_SIZE][MAX_NAME_LENGTH + 1];
+    enum yesNo isRegistered[NAMING_TABLE_SIZE];
 
     // Make all entries start with the null character
     for (i = 0; i < NAMING_TABLE_SIZE; i++) {
         memset(namingTable[i], 0, MAX_NAME_LENGTH - 1);
+        isRegistered[i] = NO;
     }
 
     // Create an array node_port to store the network link ports at the host.
@@ -261,19 +263,21 @@ _Noreturn void server_main(int host_id) {
                     // Attempt to add new Domain name to naming table
                     if(strlen(new_job->packet->payload) > MAX_NAME_LENGTH) {
                         successFailure = NAME_TOO_LONG;
-                    } else if (namingTable[new_job->packet->src][0] != '\0') {
+                    } else if (isRegistered[new_job->packet->src] == YES) {
                         successFailure = ALREADY_REGISTERED;
                     } else {
                         successFailure = SUCCESS;
                         for(i = 0; i < MAX_NAME_LENGTH; i++) {
-                            if(isspace(new_job->packet->payload[i]) != 0) {
+                            if(new_job->packet->payload[i] == ' ') {
                                 successFailure = INVALID_NAME;
                                 break;
                             }
                         }
                     }
                     if(successFailure == SUCCESS) {
-                        strcpy(namingTable[(int) new_job->packet->src], new_job->packet->payload);
+                        j = sprintf(namingTable[(int) new_job->packet->src], "%s", new_job->packet->payload);
+                        namingTable[(int) new_job->packet->src][j] = '\0';
+                        isRegistered[(int) new_job->packet->src] = YES;
                     }
 
                     // Create DNS registration reply packet
@@ -314,7 +318,8 @@ _Noreturn void server_main(int host_id) {
                     break;
                 case JOB_DNS_PING_REQ:
                     for(i = 0; i < NAMING_TABLE_SIZE; i++) {
-                        if(strcmp(new_job->packet->payload, namingTable[i]) == 0) {
+                        if(strncmp(new_job->packet->payload, namingTable[i], new_job->packet->length) == 0) {
+                            dnsHostIDReturn = i;
                             break;
                         }
                     }
@@ -324,12 +329,12 @@ _Noreturn void server_main(int host_id) {
                     new_packet->dst = new_job->packet->src;
                     new_packet->src = (char) host_id;
                     new_packet->type = PKT_DNS_LOOKUP_REPLY;
-                    if(i > NAMING_TABLE_SIZE) {
+                    if(dnsHostIDReturn > NAMING_TABLE_SIZE) {
                         new_packet->length = 5;
                         strcpy(new_packet->payload, "FAIL\0");
                     } else {
                         new_packet->length = 1;
-                        new_packet->payload[0] = (char) i;
+                        new_packet->payload[0] = (char) dnsHostIDReturn;
                     }
 
                     // Create job for DNS lookup reply

@@ -435,7 +435,7 @@ _Noreturn void host_main(int host_id) {
                     memset(dnsLookupBuffer, 0, MAX_DOMAIN_NAME);
                     strcpy(new_job2->fname_download, domainName);
                     new_job2->type = JOB_DNS_LOOKUP_WAIT_FOR_REPLY;
-                    new_job2->ping_timer = 10;
+                    new_job2->ping_timer = 20;
                     h_job_q_add(&job_q, new_job2);
                     break;
                 case 'P':   // Ping a host by their domain name
