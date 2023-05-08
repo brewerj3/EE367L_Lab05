@@ -51,6 +51,7 @@ char man_get_user_cmd(int curr_host) {
         printf("   (r) Register a new Domain name with the Domain Name Server\n");
         printf("   (l) Lookup a host with their Domain Name\n");
         printf("   (P) Ping a host with their Domain Name\n");
+        printf("   (D) Download from a host by giving its Domain Name\n");
         printf("   (q) Quit\n");
         printf("   Enter Command: ");
         do {
@@ -70,6 +71,7 @@ char man_get_user_cmd(int curr_host) {
             case 'r':
             case 'l':
             case 'P':
+            case 'D':
                 return cmd;
             default:
                 printf("Invalid: you entered %c\n\n", cmd);
@@ -96,7 +98,7 @@ void change_host(struct man_port_at_man *list, struct man_port_at_man **curr_hos
     }
 }
 
-/* Display the hosts on the consosle */
+/* Display the hosts on the console */
 void display_host(struct man_port_at_man *list, struct man_port_at_man *curr_host) {
     struct man_port_at_man *p;
 
@@ -290,6 +292,24 @@ void dns_ping(struct man_port_at_man *curr_host) {
     printf("%s\n", reply);
 }
 
+// Format user input when requesting a download with DNS server
+int dns_file_download(struct man_port_at_man *curr_host) {
+    int n;
+    char fileName[NAME_LENGTH];
+    char msg[NAME_LENGTH];
+    char domainName[NAME_LENGTH];
+
+    printf("Enter file name to download: ");
+    scanf("%s", fileName);
+    printf("Enter domain name of file location:  ");
+    scanf("%s", domainName);
+    printf("\n");
+
+    n = sprintf(msg, "D %s %s", domainName, fileName);
+    write(curr_host->send_fd, msg, n);
+    usleep(TENMILLISEC);
+}
+
 
 /*****************************
  * Main loop of the manager  *
@@ -342,6 +362,8 @@ void man_main() {
             case 'P': // ping a host with a domain name
                 dns_ping(curr_host);
                 break;
+            case 'D': // Download from host by giving domain name
+                dns_file_download(curr_host);
             case 'q':  /* Quit */
                 return;
             default:
