@@ -120,7 +120,7 @@ _Noreturn void switch_main(int host_id) {
     while (1) {
         // NO need to get commands from the manager
 
-        // Send control packets every 40 milliseconds
+        // Send control packets every 100 milliseconds
         controlCount++;
         if (controlCount > CONTROL_COUNT) {
             controlCount = 0;
@@ -236,7 +236,7 @@ _Noreturn void switch_main(int host_id) {
                             }
                         } else {
                             for (k = 0; k < node_port_num; k++) {
-                                if (localPortTree[k] == YES) {
+                                if (localPortTree[k] == YES && new_job->in_port_index != k) {
                                     packet_send(node_port[k], new_job->packet);
                                 }
                             }

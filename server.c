@@ -139,7 +139,7 @@ _Noreturn void server_main(int host_id) {
     // Start main loop
     while (1) {
 
-        // Send control packets every 40 milliseconds
+        // Send control packets every 100 milliseconds
         controlCount++;
         if (controlCount > CONTROL_COUNT) {
             controlCount = 0;
@@ -164,10 +164,13 @@ _Noreturn void server_main(int host_id) {
         // Get packets from incoming links and translates to jobs
         // Put jobs in job queue
         for (k = 0; k < node_port_num; k++) {
+
             in_packet = (struct packet *) malloc(sizeof(struct packet));
             n = packet_recv(node_port[k], in_packet);
 
-            if ((n > 0) && ((int) in_packet->dst == host_id)) {
+            if ((n > 0) && (in_packet->type == (char) PKT_CONTROL_PACKET)) {    // Server does not process control packets
+                free(in_packet);
+            } else if ((n > 0) && ((int) in_packet->dst == host_id)) {
                 // Handle packets that are not control packets
                 new_job = (struct server_job *) malloc(sizeof(struct server_job));
                 new_job->in_port_index = k;
@@ -196,10 +199,6 @@ _Noreturn void server_main(int host_id) {
                         free(new_job);
                         break;
                     case (char) PKT_FILE_DOWNLOAD_REQ:
-                        free(in_packet);
-                        free(new_job);
-                        break;
-                    case (char) PKT_CONTROL_PACKET:     // The DNS Server does not process control packets
                         free(in_packet);
                         free(new_job);
                         break;
