@@ -67,7 +67,6 @@ _Noreturn void server_main(int host_id) {
 
     int localRootID = host_id;
     int localRootDist = 0;
-    int localParent = -1;
     int controlCount = 0;
 
     int i, k, n;

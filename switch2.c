@@ -12,8 +12,7 @@
 #include "packet.h"
 
 enum switch_job_type {
-    JOB_SEND_PKT_ALL_PORTS,
-    JOB_FORWARD_PACKET
+    JOB_SEND_PKT_ALL_PORTS, JOB_FORWARD_PACKET
 };
 
 struct switch_job {

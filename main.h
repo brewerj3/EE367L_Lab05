@@ -3,10 +3,10 @@
 #define STRING_MAX 100
 #define NAME_LENGTH 100
 #define MAX_FILE_SIZE 1000
+#define TENMILLISEC 10000   /* 10 millisecond sleep */
 
 enum yesNo {
-    YES,
-    NO
+    YES, NO
 };
 
 enum NetNodeType { /* Types of network nodes */

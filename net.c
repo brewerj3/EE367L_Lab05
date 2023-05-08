@@ -478,8 +478,8 @@ int load_net_data_file() {
                 //fscanf(fp, " %d ", &node_id);
                 g_net_node[i].type = SWITCH;
                 g_net_node[i].id = node_id;
-            } else if(node_type == 'D') {               // DNS server node
-                if(node_id != 100) {
+            } else if (node_type == 'D') {               // DNS server node
+                if (node_id != 100) {
                     fprintf(stderr, "can only have one DNS Server\n");
                     exit(1);
                 }
@@ -542,10 +542,10 @@ int load_net_data_file() {
         if (g_net_node[i].type == HOST) {
             printf("   Node %d HOST\n", g_net_node[i].id);
         } else if (g_net_node[i].type == SWITCH) {
-            printf("   Node %d Switch\n",g_net_node[i].id);
-        } else if(g_net_node[i].type == SERVER){
-            printf("   Node %d Domain Name Server\n",g_net_node[i].id);
-        }else {
+            printf("   Node %d Switch\n", g_net_node[i].id);
+        } else if (g_net_node[i].type == SERVER) {
+            printf("   Node %d Domain Name Server\n", g_net_node[i].id);
+        } else {
             printf(" Unknown Type\n");
         }
     }

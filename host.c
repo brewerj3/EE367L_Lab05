@@ -227,7 +227,7 @@ _Noreturn void host_main(int host_id) {
     memset(dnsRegisterBuffer, 0, MAX_DOMAIN_NAME + 1);
     dnsRegisterBuffer[0] = '\0';
     char dnsLookupBuffer[MAX_DOMAIN_NAME + 1];
-    memset(dnsLookupBuffer, 0 ,MAX_DOMAIN_NAME + 1);
+    memset(dnsLookupBuffer, 0, MAX_DOMAIN_NAME + 1);
     dnsLookupBuffer[0] = '\0';
 
     FILE *fp;
@@ -828,23 +828,23 @@ _Noreturn void host_main(int host_id) {
                     break;
                 case JOB_DNS_REGISTER_WAIT_FOR_REPLY:
                     // Wait for the DNS registration to reply
-                    if(dns_register_received == 1) {
-                        if(strncmp(dnsRegisterBuffer, "S", 1) == 0) {
+                    if (dns_register_received == 1) {
+                        if (strncmp(dnsRegisterBuffer, "S", 1) == 0) {
                             n = sprintf(man_reply_msg, "Successfully registered domain name");
                             man_reply_msg[n] = '\0';
                             write(man_port->send_fd, man_reply_msg, n + 1);
                             free(new_job);
-                        } else if(strncmp(dnsRegisterBuffer, "FN", 2) == 0) {
+                        } else if (strncmp(dnsRegisterBuffer, "FN", 2) == 0) {
                             n = sprintf(man_reply_msg, "Failed to register: Name too long");
                             man_reply_msg[n] = '\0';
                             write(man_port->send_fd, man_reply_msg, n + 1);
                             free(new_job);
-                        } else if(strncmp(dnsRegisterBuffer, "FI", 2) == 0) {
+                        } else if (strncmp(dnsRegisterBuffer, "FI", 2) == 0) {
                             n = sprintf(man_reply_msg, "Failed to register: Name is Invalid");
                             man_reply_msg[n] = '\0';
                             write(man_port->send_fd, man_reply_msg, n + 1);
                             free(new_job);
-                        } else if(strncmp(man_reply_msg, "FA", 2) == 0) {
+                        } else if (strncmp(man_reply_msg, "FA", 2) == 0) {
                             n = sprintf(man_reply_msg, "Failed to register: Already registered");
                             man_reply_msg[n] = '\0';
                             write(man_port->send_fd, man_reply_msg, n + 1);
@@ -856,7 +856,7 @@ _Noreturn void host_main(int host_id) {
                             free(new_job);
                         }
                         memset(dnsRegisterBuffer, 0, MAX_DOMAIN_NAME);
-                    } else if(new_job->ping_timer > 1) {
+                    } else if (new_job->ping_timer > 1) {
                         new_job->ping_timer--;
                         h_job_q_add(&job_q, new_job);
                     } else { /* Time out */
@@ -867,21 +867,21 @@ _Noreturn void host_main(int host_id) {
                     }
                     break;
                 case JOB_DNS_LOOKUP_WAIT_FOR_REPLY:
-                    if(dns_lookup_received == 1) {
-                        if(strncmp(dnsLookupBuffer, "FAIL", 4) == 0) {
+                    if (dns_lookup_received == 1) {
+                        if (strncmp(dnsLookupBuffer, "FAIL", 4) == 0) {
                             n = sprintf(man_reply_msg, "DNS lookup failed.");
                             man_reply_msg[n] = '\0';
                             write(man_port->send_fd, man_reply_msg, n + 1);
                             free(new_job);
                         } else {
                             dnsLookupResponse = (int) dnsLookupBuffer[0];
-                            n = sprintf(man_reply_msg, "DNS lookup response %i.",dnsLookupResponse);
+                            n = sprintf(man_reply_msg, "DNS lookup response %i.", dnsLookupResponse);
                             man_reply_msg[n] = '\0';
                             write(man_port->send_fd, man_reply_msg, n + 1);
                             free(new_job);
                         }
                         memset(dnsLookupBuffer, 0, MAX_DOMAIN_NAME);
-                    } else if(new_job->ping_timer > 1) {
+                    } else if (new_job->ping_timer > 1) {
                         new_job->ping_timer--;
                         h_job_q_add(&job_q, new_job);
                     } else { /* Time out */
@@ -892,8 +892,8 @@ _Noreturn void host_main(int host_id) {
                     }
                     break;
                 case JOB_DNS_PING_WAIT_FOR_REPLY:
-                    if(dns_lookup_received == 1) {
-                        if(strncmp(dnsLookupBuffer, "FAIL", 4) == 0) {
+                    if (dns_lookup_received == 1) {
+                        if (strncmp(dnsLookupBuffer, "FAIL", 4) == 0) {
                             n = sprintf(man_reply_msg, "DNS lookup failed.");
                             man_reply_msg[n] = '\0';
                             write(man_port->send_fd, man_reply_msg, n + 1);
@@ -927,7 +927,7 @@ _Noreturn void host_main(int host_id) {
                         }
                         memset(dnsLookupBuffer, 0, MAX_DOMAIN_NAME);
                         dns_lookup_received = 0;
-                    } else if(new_job->ping_timer > 1) {
+                    } else if (new_job->ping_timer > 1) {
                         new_job->ping_timer--;
                         h_job_q_add(&job_q, new_job);
                     } else { /* Time out */
@@ -938,8 +938,8 @@ _Noreturn void host_main(int host_id) {
                     }
                     break;
                 case JOB_DNS_DOWNLOAD_WAIT_FOR_REPLY:
-                    if(dns_lookup_received == 1) {
-                        if(strncmp(dnsLookupBuffer, "FAIL", 4) == 0) {
+                    if (dns_lookup_received == 1) {
+                        if (strncmp(dnsLookupBuffer, "FAIL", 4) == 0) {
                             n = sprintf(man_reply_msg, "DNS lookup failed.");
                             man_reply_msg[n] = '\0';
                             write(man_port->send_fd, man_reply_msg, n + 1);
@@ -970,7 +970,7 @@ _Noreturn void host_main(int host_id) {
                         }
                         memset(dnsLookupBuffer, 0, MAX_DOMAIN_NAME);
                         dns_lookup_received = 0;
-                    } else if(new_job->ping_timer > 1) {
+                    } else if (new_job->ping_timer > 1) {
                         new_job->ping_timer--;
                         h_job_q_add(&job_q, new_job);
                     } else { /* Time out */

@@ -93,7 +93,7 @@ void packet_send(struct net_port *port, struct packet *p) {
 
         // This actually sends the packet
         write(port->pipe_send_fd, msg, p->length + 4);
-    } else if(port->type == SOCKET) {
+    } else if (port->type == SOCKET) {
         msg[0] = (char) p->src;     // The source of the packet being sent, (the host id)
         msg[1] = (char) p->dst;     // The destination of the packet being sent
         msg[2] = (char) p->type;    // The type of packet being sent
@@ -111,13 +111,13 @@ void packet_send(struct net_port *port, struct packet *p) {
         hints.ai_family = AF_UNSPEC;
         hints.ai_socktype = SOCK_STREAM;
 
-        if((rv = getaddrinfo(port->sendDomain, port->sendPortNumber, &hints, &servinfo)) != 0) {
+        if ((rv = getaddrinfo(port->sendDomain, port->sendPortNumber, &hints, &servinfo)) != 0) {
             fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
             exit(1);
         }
 
-        for(p1 = servinfo; p1 != NULL; p1 = p1->ai_next) {
-            if((sockfd = socket(p1->ai_family, p1->ai_socktype, p1->ai_protocol)) == -1) {
+        for (p1 = servinfo; p1 != NULL; p1 = p1->ai_next) {
+            if ((sockfd = socket(p1->ai_family, p1->ai_socktype, p1->ai_protocol)) == -1) {
                 perror("sending packet: socket");
                 continue;
             }
@@ -136,7 +136,7 @@ void packet_send(struct net_port *port, struct packet *p) {
         }
 
         // Send the packet
-        send(sockfd, msg, p->length + 4,0);
+        send(sockfd, msg, p->length + 4, 0);
 
         // Close the socket when done
         close(sockfd);
@@ -162,22 +162,22 @@ int packet_recv(struct net_port *port, struct packet *p) {
                 p->payload[i] = msg[i + 4];
             }
         }
-    } else if(port->type == SOCKET) {
+    } else if (port->type == SOCKET) {
         //printf("socket Recv\n");
         static int sockfd;
         int new_fd;
         // Setup the listening socket
-        if(setup != 0) {
+        if (setup != 0) {
             printf("setting up listening socket\n");
             sockfd = setupListeningSocket(port);
-            if(sockfd == -1) {
+            if (sockfd == -1) {
                 printf("function setupListeningSocket errored\n");
             }
             setup = 0;
         }
         // Use accept to accept connection
         new_fd = accept(sockfd, NULL, 0);
-        if(new_fd == -1) {
+        if (new_fd == -1) {
             // If new_fd equals -1 then there is no connect attempt
             //perror("accept");
             return 0;
@@ -185,7 +185,7 @@ int packet_recv(struct net_port *port, struct packet *p) {
 
         n = recv(new_fd, msg, PAYLOAD_MAX + 4, 0);
         close(new_fd);
-        if(n > 0) {
+        if (n > 0) {
             //printf("recieved on socket\n");
             p->src = (char) msg[0];             // The host id of the source
             p->dst = (char) msg[1];             // The host id of the intended destination of the packet

@@ -3,11 +3,8 @@
 
 #define MAX_LOOKUP_TABLE_SIZE 100
 
-#define TENMILLISEC 10000   /* 10 millisecond sleep */
-
 enum valid {
-    False,
-    True
+    False, True
 };
 
 struct switch_job_queue {

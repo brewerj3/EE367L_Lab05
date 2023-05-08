@@ -2,8 +2,6 @@
  * host.h
  */
 
-#define TENMILLISEC 10000   /* 10 millisecond sleep */
-
 // Added JOB_FILE_UPLOAD_MIDDLE
 enum host_job_type {
     JOB_SEND_PKT_ALL_PORTS,
@@ -19,7 +17,6 @@ enum host_job_type {
     JOB_DNS_PING_WAIT_FOR_REPLY,
     JOB_DNS_DOWNLOAD_WAIT_FOR_REPLY,
 };
-
 
 struct host_job {
     enum host_job_type type;
@@ -39,13 +36,5 @@ struct host_job_queue {
     struct host_job *tail;
     int occ;
 };
-
-//void job_q_init(struct host_job_queue *j_q);
-
-//void job_q_add(struct host_job_queue *j_q, struct host_job *j);
-
-//int job_q_num(struct host_job_queue *j_q);
-
-//struct host_job *job_q_remove(struct host_job_queue *j_q);
 
 _Noreturn void host_main(int host_id);
