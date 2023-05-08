@@ -4,6 +4,10 @@
 #define NAME_LENGTH 100
 #define MAX_FILE_SIZE 1000
 
+enum yesNo {
+    YES,
+    NO
+};
 
 enum NetNodeType { /* Types of network nodes */
     HOST, SWITCH, SERVER

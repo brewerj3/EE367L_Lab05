@@ -11,8 +11,24 @@
 #include "net.h"
 #include "packet.h"
 
+enum switch_job_type {
+    JOB_SEND_PKT_ALL_PORTS,
+    JOB_FORWARD_PACKET
+};
+
+struct switch_job {
+    enum switch_job_type type;
+    struct packet *packet;
+    int in_port_index;
+    int out_port_index;
+    char fname_upload[100];
+    int ping_timer;
+    int file_upload_dst;
+    struct switch_job *next;
+};
+
 /* Add a job to the job queue */
-void job_q_add(struct job_queue *j_q, struct host_job *j) {
+void s_job_q_add(struct switch_job_queue *j_q, struct switch_job *j) {
     if (j_q->head == NULL) {
         j_q->head = j;
         j_q->tail = j;
@@ -26,8 +42,8 @@ void job_q_add(struct job_queue *j_q, struct host_job *j) {
 }
 
 /* Remove job from the job queue, and return pointer to the job*/
-struct host_job *job_q_remove(struct job_queue *j_q) {
-    struct host_job *j;
+struct switch_job *s_job_q_remove(struct switch_job_queue *j_q) {
+    struct switch_job *j;
 
     if (j_q->occ == 0) return (NULL);
     j = j_q->head;
@@ -37,13 +53,13 @@ struct host_job *job_q_remove(struct job_queue *j_q) {
 }
 
 /* Initialize job queue */
-void job_q_init(struct job_queue *j_q) {
+void s_job_q_init(struct switch_job_queue *j_q) {
     j_q->occ = 0;
     j_q->head = NULL;
     j_q->tail = NULL;
 }
 
-int job_q_num(struct job_queue *j_q) {
+int s_job_q_num(struct switch_job_queue *j_q) {
     return j_q->occ;
 }
 
@@ -67,10 +83,10 @@ _Noreturn void switch_main(int host_id) {
     struct packet *new_packet2;
 
     struct net_port *p;
-    struct host_job *new_job;
-    struct host_job *new_job2;
+    struct switch_job *new_job;
+    struct switch_job *new_job2;
 
-    struct job_queue job_q;
+    struct switch_job_queue job_q;
 
     // Create an array node_port to store the network link ports at the host.
     node_port_list = net_get_port_list(host_id);
@@ -103,7 +119,7 @@ _Noreturn void switch_main(int host_id) {
     }
 
     // Initialize the job queue
-    job_q_init(&job_q);
+    s_job_q_init(&job_q);
 
     while (1) {
         // NO need to get commands from the manager
@@ -125,10 +141,10 @@ _Noreturn void switch_main(int host_id) {
             // set packetSenderChild when sending the packet
 
             // Create a new job to send the control packet
-            new_job = (struct host_job *) malloc(sizeof(struct host_job));
+            new_job = (struct switch_job *) malloc(sizeof(struct switch_job));
             new_job->packet = new_packet;
             new_job->type = JOB_SEND_PKT_ALL_PORTS;
-            job_q_add(&job_q, new_job);
+            s_job_q_add(&job_q, new_job);
 
         }
 
@@ -173,7 +189,7 @@ _Noreturn void switch_main(int host_id) {
                     free(in_packet);
                 } else {
                     // Create a new job to handle the packet
-                    new_job = (struct host_job *) malloc(sizeof(struct host_job));
+                    new_job = (struct switch_job *) malloc(sizeof(struct switch_job));
                     new_job->in_port_index = k;
                     new_job->packet = in_packet;
                     dst = (int) in_packet->dst;
@@ -196,7 +212,7 @@ _Noreturn void switch_main(int host_id) {
                         lookupTable->destination[location] = location;
                         lookupTable->portNumber[location] = new_job->in_port_index;
                     }
-                    job_q_add(&job_q, new_job);
+                    s_job_q_add(&job_q, new_job);
                 }
 
             } else {
@@ -206,10 +222,10 @@ _Noreturn void switch_main(int host_id) {
         }
 
         // Execute one job in the job queue
-        if (job_q_num(&job_q) > 0) {
+        if (s_job_q_num(&job_q) > 0) {
 
             // Get a new job from the job queue
-            new_job = job_q_remove(&job_q);
+            new_job = s_job_q_remove(&job_q);
 
             // Send packets
             switch (new_job->type) {

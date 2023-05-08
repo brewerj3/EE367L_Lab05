@@ -154,7 +154,7 @@ void reply_display_host_state(struct man_port_at_host *port, char dir[], int dir
 /* Job queue operations */
 
 /* Add a job to the job queue */
-void job_q_add(struct job_queue *j_q, struct host_job *j) {
+void h_job_q_add(struct host_job_queue *j_q, struct host_job *j) {
     if (j_q->head == NULL) {
         j_q->head = j;
         j_q->tail = j;
@@ -168,7 +168,7 @@ void job_q_add(struct job_queue *j_q, struct host_job *j) {
 }
 
 /* Remove job from the job queue, and return pointer to the job*/
-struct host_job *job_q_remove(struct job_queue *j_q) {
+struct host_job *h_job_q_remove(struct host_job_queue *j_q) {
     struct host_job *j;
 
     if (j_q->occ == 0) return (NULL);
@@ -179,13 +179,13 @@ struct host_job *job_q_remove(struct job_queue *j_q) {
 }
 
 /* Initialize job queue */
-void job_q_init(struct job_queue *j_q) {
+void h_job_q_init(struct host_job_queue *j_q) {
     j_q->occ = 0;
     j_q->head = NULL;
     j_q->tail = NULL;
 }
 
-int job_q_num(struct job_queue *j_q) {
+int h_job_q_num(struct host_job_queue *j_q) {
     return j_q->occ;
 }
 
@@ -240,7 +240,7 @@ _Noreturn void host_main(int host_id) {
     struct host_job *new_job;
     struct host_job *new_job2;
 
-    struct job_queue job_q;
+    struct host_job_queue job_q;
 
     struct file_buf f_buf_upload;
     struct file_buf f_buf_download;
@@ -283,7 +283,7 @@ _Noreturn void host_main(int host_id) {
     }
 
 /* Initialize the job queue */
-    job_q_init(&job_q);
+    h_job_q_init(&job_q);
 
     while (1) {
 
@@ -306,7 +306,7 @@ _Noreturn void host_main(int host_id) {
             new_job = (struct host_job *) malloc(sizeof(struct host_job));
             new_job->packet = new_packet;
             new_job->type = JOB_SEND_PKT_ALL_PORTS;
-            job_q_add(&job_q, new_job);
+            h_job_q_add(&job_q, new_job);
         }
 
         /* Execute command from manager, if any */
@@ -340,13 +340,13 @@ _Noreturn void host_main(int host_id) {
                     new_job = (struct host_job *) malloc(sizeof(struct host_job));
                     new_job->packet = new_packet;
                     new_job->type = JOB_SEND_PKT_ALL_PORTS;
-                    job_q_add(&job_q, new_job);
+                    h_job_q_add(&job_q, new_job);
 
                     new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
                     ping_reply_received = 0;
                     new_job2->type = JOB_PING_WAIT_FOR_REPLY;
                     new_job2->ping_timer = 10;
-                    job_q_add(&job_q, new_job2);
+                    h_job_q_add(&job_q, new_job2);
                     break;
 
                 case 'u': /* Upload a file to a host */
@@ -358,7 +358,7 @@ _Noreturn void host_main(int host_id) {
                         new_job->fname_upload[i] = name[i];
                     }
                     new_job->fname_upload[i] = '\0';
-                    job_q_add(&job_q, new_job);
+                    h_job_q_add(&job_q, new_job);
 
                     break;
                 case 'd': // Request a file to be downloaded
@@ -379,7 +379,7 @@ _Noreturn void host_main(int host_id) {
                     new_job = (struct host_job *) malloc(sizeof(struct host_job));
                     new_job->packet = new_packet;
                     new_job->type = JOB_SEND_PKT_ALL_PORTS;
-                    job_q_add(&job_q, new_job);
+                    h_job_q_add(&job_q, new_job);
                     break;
                 case 'r':   // Register a domain name with the DNS server
                     sscanf(man_msg, "%s", domainName);
@@ -399,7 +399,7 @@ _Noreturn void host_main(int host_id) {
                     new_job = (struct host_job *) malloc(sizeof(struct host_job));
                     new_job->packet = new_packet;
                     new_job->type = JOB_SEND_PKT_ALL_PORTS;
-                    job_q_add(&job_q, new_job);
+                    h_job_q_add(&job_q, new_job);
 
                     // Create a second job to wait for reply
                     new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
@@ -407,7 +407,7 @@ _Noreturn void host_main(int host_id) {
                     memset(dnsRegisterBuffer, 0, MAX_DOMAIN_NAME);
                     new_job2->type = JOB_DNS_REGISTER_WAIT_FOR_REPLY;
                     new_job2->ping_timer = 20;
-                    job_q_add(&job_q, new_job2);
+                    h_job_q_add(&job_q, new_job2);
                     break;
                 case 'l':   // lookup a host id by their hostname
                     sscanf(man_msg, "%s", domainName);
@@ -427,7 +427,7 @@ _Noreturn void host_main(int host_id) {
                     new_job = (struct host_job *) malloc(sizeof(struct host_job));
                     new_job->packet = new_packet;
                     new_job->type = JOB_SEND_PKT_ALL_PORTS;
-                    job_q_add(&job_q, new_job);
+                    h_job_q_add(&job_q, new_job);
 
                     // Create a second job to wait for reply
                     new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
@@ -436,7 +436,7 @@ _Noreturn void host_main(int host_id) {
                     strcpy(new_job2->fname_download, domainName);
                     new_job2->type = JOB_DNS_LOOKUP_WAIT_FOR_REPLY;
                     new_job2->ping_timer = 10;
-                    job_q_add(&job_q, new_job2);
+                    h_job_q_add(&job_q, new_job2);
                     break;
                 case 'P':   // Ping a host by their domain name
                     sscanf(man_msg, "%s", domainName);
@@ -455,14 +455,14 @@ _Noreturn void host_main(int host_id) {
                     new_job = (struct host_job *) malloc(sizeof(struct host_job));
                     new_job->packet = new_packet;
                     new_job->type = JOB_SEND_PKT_ALL_PORTS;
-                    job_q_add(&job_q, new_job);
+                    h_job_q_add(&job_q, new_job);
 
                     // Create a second job to wait for reply
                     new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
                     dns_lookup_received = 0;
                     new_job2->type = JOB_DNS_PING_WAIT_FOR_REPLY;
                     new_job2->ping_timer = 10;
-                    job_q_add(&job_q, new_job2);
+                    h_job_q_add(&job_q, new_job2);
                     break;
                 case 'D':   // Download from a host by giving their domain name
                     sscanf(man_msg, "%s %s", domainName, name);
@@ -482,7 +482,7 @@ _Noreturn void host_main(int host_id) {
                     new_job = (struct host_job *) malloc(sizeof(struct host_job));
                     new_job->packet = new_packet;
                     new_job->type = JOB_SEND_PKT_ALL_PORTS;
-                    job_q_add(&job_q, new_job);
+                    h_job_q_add(&job_q, new_job);
 
                     // Create a second job to wait for reply
                     new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
@@ -490,7 +490,7 @@ _Noreturn void host_main(int host_id) {
                     strcpy(new_job2->fname_download, domainName);
                     new_job2->type = JOB_DNS_DOWNLOAD_WAIT_FOR_REPLY;
                     new_job2->ping_timer = 10;
-                    job_q_add(&job_q, new_job2);
+                    h_job_q_add(&job_q, new_job2);
                     break;
                 default:;
             }
@@ -522,7 +522,7 @@ _Noreturn void host_main(int host_id) {
                      */
                     case (char) PKT_PING_REQ:
                         new_job->type = JOB_PING_SEND_REPLY;
-                        job_q_add(&job_q, new_job);
+                        h_job_q_add(&job_q, new_job);
                         break;
 
                     case (char) PKT_PING_REPLY:
@@ -546,18 +546,18 @@ _Noreturn void host_main(int host_id) {
 
                     case (char) PKT_FILE_UPLOAD_START:
                         new_job->type = JOB_FILE_UPLOAD_RECV_START;
-                        job_q_add(&job_q, new_job);
+                        h_job_q_add(&job_q, new_job);
                         break;
 
                     case (char) PKT_FILE_UPLOAD_END:
                         new_job->type = JOB_FILE_UPLOAD_RECV_END;
-                        job_q_add(&job_q, new_job);
+                        h_job_q_add(&job_q, new_job);
                         break;
 
                         // Added by Joshua Brewer
                     case (char) PKT_FILE_UPLOAD_MIDDLE:         // Packet containing the middle contents of a file
                         new_job->type = JOB_FILE_UPLOAD_RECV_MIDDLE;
-                        job_q_add(&job_q, new_job);
+                        h_job_q_add(&job_q, new_job);
                         break;
 
                     case (char) PKT_FILE_DOWNLOAD_REQ:           // Start a upload
@@ -568,7 +568,7 @@ _Noreturn void host_main(int host_id) {
                         }
                         new_job->fname_upload[i] = '\0';
                         new_job->file_upload_dst = (int) in_packet->src;
-                        job_q_add(&job_q, new_job);
+                        h_job_q_add(&job_q, new_job);
                         break;
                     case (char) PKT_DNS_REGISTER_REPLY:
                         dns_register_received = 1;
@@ -595,10 +595,10 @@ _Noreturn void host_main(int host_id) {
          * Execute one job in the job queue
          */
 
-        if (job_q_num(&job_q) > 0) {
+        if (h_job_q_num(&job_q) > 0) {
 
             /* Get a new job from the job queue */
-            new_job = job_q_remove(&job_q);
+            new_job = h_job_q_remove(&job_q);
 
 
             /* Send packet on all ports */
@@ -630,7 +630,7 @@ _Noreturn void host_main(int host_id) {
                     new_job2->packet = new_packet;
 
                     /* Enter job in the job queue */
-                    job_q_add(&job_q, new_job2);
+                    h_job_q_add(&job_q, new_job2);
 
                     /* Free old packet and job memory space */
                     free(new_job->packet);
@@ -647,7 +647,7 @@ _Noreturn void host_main(int host_id) {
                         free(new_job);
                     } else if (new_job->ping_timer > 1) {
                         new_job->ping_timer--;
-                        job_q_add(&job_q, new_job);
+                        h_job_q_add(&job_q, new_job);
                     } else { /* Time out */
                         n = sprintf(man_reply_msg, "Ping time out!");
                         man_reply_msg[n] = '\0';
@@ -687,7 +687,7 @@ _Noreturn void host_main(int host_id) {
                             new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
                             new_job2->type = JOB_SEND_PKT_ALL_PORTS;
                             new_job2->packet = new_packet;
-                            job_q_add(&job_q, new_job2);
+                            h_job_q_add(&job_q, new_job2);
 
                             // fread returns the number of characters in the file
                             n = fread(buffer, sizeof(char), MAX_FILE_BUFFER, fp);
@@ -726,7 +726,7 @@ _Noreturn void host_main(int host_id) {
                                 new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
                                 new_job2->type = JOB_SEND_PKT_ALL_PORTS;
                                 new_job2->packet = new_packet;
-                                job_q_add(&job_q, new_job2);
+                                h_job_q_add(&job_q, new_job2);
                             }
 
                             /*
@@ -752,7 +752,7 @@ _Noreturn void host_main(int host_id) {
                             new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
                             new_job2->type = JOB_SEND_PKT_ALL_PORTS;
                             new_job2->packet = new_packet;
-                            job_q_add(&job_q, new_job2);
+                            h_job_q_add(&job_q, new_job2);
 
                             free(new_job);
                         } else {
@@ -858,7 +858,7 @@ _Noreturn void host_main(int host_id) {
                         memset(dnsRegisterBuffer, 0, MAX_DOMAIN_NAME);
                     } else if(new_job->ping_timer > 1) {
                         new_job->ping_timer--;
-                        job_q_add(&job_q, new_job);
+                        h_job_q_add(&job_q, new_job);
                     } else { /* Time out */
                         n = sprintf(man_reply_msg, "DNS registration time out!");
                         man_reply_msg[n] = '\0';
@@ -883,7 +883,7 @@ _Noreturn void host_main(int host_id) {
                         memset(dnsLookupBuffer, 0, MAX_DOMAIN_NAME);
                     } else if(new_job->ping_timer > 1) {
                         new_job->ping_timer--;
-                        job_q_add(&job_q, new_job);
+                        h_job_q_add(&job_q, new_job);
                     } else { /* Time out */
                         n = sprintf(man_reply_msg, "DNS lookup time out!");
                         man_reply_msg[n] = '\0';
@@ -916,20 +916,20 @@ _Noreturn void host_main(int host_id) {
                             new_job = (struct host_job *) malloc(sizeof(struct host_job));
                             new_job->packet = new_packet;
                             new_job->type = JOB_SEND_PKT_ALL_PORTS;
-                            job_q_add(&job_q, new_job);
+                            h_job_q_add(&job_q, new_job);
 
                             // Create job to wait for ping request
                             new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
                             ping_reply_received = 0;
                             new_job2->type = JOB_PING_WAIT_FOR_REPLY;
                             new_job2->ping_timer = 10;
-                            job_q_add(&job_q, new_job2);
+                            h_job_q_add(&job_q, new_job2);
                         }
                         memset(dnsLookupBuffer, 0, MAX_DOMAIN_NAME);
                         dns_lookup_received = 0;
                     } else if(new_job->ping_timer > 1) {
                         new_job->ping_timer--;
-                        job_q_add(&job_q, new_job);
+                        h_job_q_add(&job_q, new_job);
                     } else { /* Time out */
                         n = sprintf(man_reply_msg, "DNS lookup time out!");
                         man_reply_msg[n] = '\0';
@@ -966,13 +966,13 @@ _Noreturn void host_main(int host_id) {
                             new_job = (struct host_job *) malloc(sizeof(struct host_job));
                             new_job->packet = new_packet;
                             new_job->type = JOB_SEND_PKT_ALL_PORTS;
-                            job_q_add(&job_q, new_job);
+                            h_job_q_add(&job_q, new_job);
                         }
                         memset(dnsLookupBuffer, 0, MAX_DOMAIN_NAME);
                         dns_lookup_received = 0;
                     } else if(new_job->ping_timer > 1) {
                         new_job->ping_timer--;
-                        job_q_add(&job_q, new_job);
+                        h_job_q_add(&job_q, new_job);
                     } else { /* Time out */
                         n = sprintf(man_reply_msg, "DNS lookup time out!");
                         man_reply_msg[n] = '\0';

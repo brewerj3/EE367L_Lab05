@@ -11,13 +11,16 @@
 #include "packet.h"
 #include "net.h"
 
+#define MAX_NAME_LENGTH 50
+
+
 struct name_buf {
     char name[MAX_NAME_LENGTH];
     int name_length;
     int src;
 };
 
-void job_q_add(struct job_queue *j_q, struct host_job *j) {
+void job_q_add(struct server_job_queue *j_q, struct server_job *j) {
     if (j_q->head == NULL) {
         j_q->head = j;
         j_q->tail = j;
@@ -31,8 +34,8 @@ void job_q_add(struct job_queue *j_q, struct host_job *j) {
 }
 
 /* Remove job from the job queue, and return pointer to the job*/
-struct host_job *job_q_remove(struct job_queue *j_q) {
-    struct host_job *j;
+struct server_job *job_q_remove(struct server_job_queue *j_q) {
+    struct server_job *j;
 
     if (j_q->occ == 0) return (NULL);
     j = j_q->head;
@@ -42,13 +45,13 @@ struct host_job *job_q_remove(struct job_queue *j_q) {
 }
 
 /* Initialize job queue */
-void job_q_init(struct job_queue *j_q) {
+void job_q_init(struct server_job_queue *j_q) {
     j_q->occ = 0;
     j_q->head = NULL;
     j_q->tail = NULL;
 }
 
-int job_q_num(struct job_queue *j_q) {
+int job_q_num(struct server_job_queue *j_q) {
     return j_q->occ;
 }
 
@@ -74,10 +77,10 @@ _Noreturn void server_main(int host_id) {
     struct packet *new_packet;
 
     struct net_port *p;
-    struct host_job *new_job;
-    struct host_job *new_job2;
+    struct server_job *new_job;
+    struct server_job *new_job2;
 
-    struct job_queue job_q;
+    struct server_job_queue job_q;
 
     // Create the DNS naming table
     char namingTable[NAMING_TABLE_SIZE][MAX_NAME_LENGTH + 1];
@@ -132,7 +135,7 @@ _Noreturn void server_main(int host_id) {
             // Set packetSenderChild when sending the packet
 
             // Create a new job to send the packet, then add to queue
-            new_job = (struct host_job *) malloc(sizeof(struct host_job));
+            new_job = (struct server_job *) malloc(sizeof(struct server_job));
             new_job->packet = new_packet;
             new_job->type = JOB_SEND_PKT_ALL_PORTS;
             job_q_add(&job_q, new_job);
@@ -146,7 +149,7 @@ _Noreturn void server_main(int host_id) {
 
             if ((n > 0) && ((int) in_packet->dst == host_id)) {
                 // Handle packets that are not control packets
-                new_job = (struct host_job *) malloc(sizeof(struct host_job));
+                new_job = (struct server_job *) malloc(sizeof(struct server_job));
                 new_job->in_port_index = k;
                 new_job->packet = in_packet;
 
@@ -225,7 +228,7 @@ _Noreturn void server_main(int host_id) {
                     new_packet->length = 0;
 
                     /* Create job for the ping reply */
-                    new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
+                    new_job2 = (struct server_job *) malloc(sizeof(struct server_job));
                     new_job2->type = JOB_SEND_PKT_ALL_PORTS;
                     new_job2->packet = new_packet;
 
@@ -262,7 +265,7 @@ _Noreturn void server_main(int host_id) {
                     new_packet->type = PKT_DNS_REGISTER_REPLY;
 
                     // Create Job for DNS reply
-                    new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
+                    new_job2 = (struct server_job *) malloc(sizeof(struct server_job));
                     new_job2->type = JOB_SEND_PKT_ALL_PORTS;
                     new_job2->packet = new_packet;
 
@@ -316,7 +319,7 @@ _Noreturn void server_main(int host_id) {
                     }
 
                     // Create job for DNS lookup reply
-                    new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
+                    new_job2 = (struct server_job *) malloc(sizeof(struct server_job));
                     new_job2->type = JOB_SEND_PKT_ALL_PORTS;
                     new_job2->packet = new_packet;
 

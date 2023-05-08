@@ -522,13 +522,9 @@ int load_net_data_file() {
                 g_net_link[i].pipe_node0 = node0;
                 g_net_link[i].pipe_node1 = node1;
             } else if (link_type == 'S') {   // Create a socket
-                //printf("Creating a socket\n");
                 fscanf(fp, " %d %s %s %s %s", &node0, domain0, port0, domain1, port1);
-                //printf("fscanf completed\n");
                 g_net_link[i].type = SOCKET;
                 g_net_link[i].pipe_node0 = node0;
-                //printf("strcpy()\n");
-                //strcpy(g_net_link[i].recv)
                 strcpy(g_net_link[i].port_recv, port0);         // Port to listen to
                 strcpy(g_net_link[i].sendingDomain, domain1);   // Domain to send to
                 strcpy(g_net_link[i].port_send, port1);         // Port to send to

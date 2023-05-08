@@ -10,31 +10,9 @@ enum valid {
     True
 };
 
-enum host_job_type {
-    JOB_SEND_PKT_ALL_PORTS,
-    JOB_FORWARD_PACKET
-};
-
-struct host_job {
-    enum host_job_type type;
-    struct packet *packet;
-    int in_port_index;
-    int out_port_index;
-    char fname_upload[100];
-    int ping_timer;
-    int file_upload_dst;
-    struct host_job *next;
-};
-
-
-enum yesNo {
-    YES,
-    NO
-};
-
-struct job_queue {
-    struct host_job *head;
-    struct host_job *tail;
+struct switch_job_queue {
+    struct switch_job *head;
+    struct switch_job *tail;
     int occ;
 };
 

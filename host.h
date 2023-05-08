@@ -17,13 +17,9 @@ enum host_job_type {
     JOB_DNS_REGISTER_WAIT_FOR_REPLY,
     JOB_DNS_LOOKUP_WAIT_FOR_REPLY,  // Should be different response from the next job
     JOB_DNS_PING_WAIT_FOR_REPLY,
-    JOB_DNS_DOWNLOAD_WAIT_FOR_REPLY
+    JOB_DNS_DOWNLOAD_WAIT_FOR_REPLY,
 };
 
-enum yesNo {
-    YES,
-    NO
-};
 
 struct host_job {
     enum host_job_type type;
@@ -38,18 +34,18 @@ struct host_job {
 };
 
 
-struct job_queue {
+struct host_job_queue {
     struct host_job *head;
     struct host_job *tail;
     int occ;
 };
 
-void job_q_init(struct job_queue *j_q);
+//void job_q_init(struct host_job_queue *j_q);
 
-void job_q_add(struct job_queue *j_q, struct host_job *j);
+//void job_q_add(struct host_job_queue *j_q, struct host_job *j);
 
-int job_q_num(struct job_queue *j_q);
+//int job_q_num(struct host_job_queue *j_q);
 
-struct host_job *job_q_remove(struct job_queue *j_q);
+//struct host_job *job_q_remove(struct host_job_queue *j_q);
 
 _Noreturn void host_main(int host_id);
