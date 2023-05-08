@@ -238,6 +238,7 @@ void dns_register(struct man_port_at_man *curr_host) {
     int n;
     char domainName[NAME_LENGTH];
     char msg[NAME_LENGTH];
+    char reply[MAN_MSG_LENGTH];
 
     printf("Enter name to register with DNS: ");
     scanf("%s", domainName);
@@ -245,7 +246,13 @@ void dns_register(struct man_port_at_man *curr_host) {
 
     n = sprintf(msg, "r %s", domainName);
     write(curr_host->send_fd, msg, n);
-    usleep(TENMILLISEC);
+    n = 0;
+    while (n <= 0) {
+        usleep(TENMILLISEC);
+        n = read(curr_host->recv_fd, reply, MAN_MSG_LENGTH);
+    }
+    reply[n] = '\0';
+    printf("%s\n", reply);
 }
 
 void dns_lookup(struct man_port_at_man *curr_host) {

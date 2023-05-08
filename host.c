@@ -217,7 +217,7 @@ _Noreturn void host_main(int host_id) {
     int localRootDist = 0;
     int controlCount = 0;
 
-    int i, k, n;
+    int i, k, n, j;
     int dst;
     char name[MAX_FILE_NAME];
     char domainName[MAX_DOMAIN_NAME];
@@ -387,7 +387,7 @@ _Noreturn void host_main(int host_id) {
                     // Create a new packet
                     new_packet = (struct packet *) malloc(sizeof(struct packet));
                     new_packet->src = (char) host_id;
-                    new_packet->dst = 100;  // DNS server always has id 100
+                    new_packet->dst = (char) 100;  // DNS server always has id 100
                     new_packet->type = (char) PKT_DNS_REGISTER;
                     for (i = 0; domainName[i] != '\0'; i++) {
                         new_packet->payload[i] = domainName[i];
@@ -406,7 +406,7 @@ _Noreturn void host_main(int host_id) {
                     dns_register_received = 0;
                     memset(dnsRegisterBuffer, 0, MAX_DOMAIN_NAME);
                     new_job2->type = JOB_DNS_REGISTER_WAIT_FOR_REPLY;
-                    new_job2->ping_timer = 20;
+                    new_job2->ping_timer = 10;
                     h_job_q_add(&job_q, new_job2);
                     break;
                 case 'l':   // lookup a host id by their hostname
@@ -572,13 +572,15 @@ _Noreturn void host_main(int host_id) {
                         break;
                     case (char) PKT_DNS_REGISTER_REPLY:
                         dns_register_received = 1;
-                        strcpy(dnsRegisterBuffer, in_packet->payload);
+                        j = sprintf(dnsRegisterBuffer, "%s", in_packet->payload);
+                        dnsRegisterBuffer[n] = '\0';
                         free(in_packet);
                         free(new_job);
                         break;
                     case (char) PKT_DNS_LOOKUP_REPLY:
                         dns_lookup_received = 1;
-                        strcpy(dnsLookupBuffer, in_packet->payload);
+                        j = sprintf(dnsLookupBuffer, "%s", in_packet->payload);
+                        dnsLookupBuffer[j] = '\0';
                         free(in_packet);
                         free(new_job);
                         break;
