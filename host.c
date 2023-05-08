@@ -210,12 +210,10 @@ _Noreturn void host_main(int host_id) {
     int ping_reply_received;
     int dns_register_received;
     int dns_lookup_received;
-    int dns_ping_received;
     int dnsLookupResponse;
 
     int localRootID = host_id;
     int localRootDist = 0;
-    int localParent = -1;
     int controlCount = 0;
 
     int i, k, n;
@@ -272,7 +270,7 @@ _Noreturn void host_main(int host_id) {
     node_port = (struct net_port **) malloc(node_port_num * sizeof(struct net_port *));
 
     // Create local port tree array
-    enum yesNo localPortTree[node_port_num];
+    //enum yesNo localPortTree[node_port_num];
 
     /* Load ports into the array */
     p = node_port_list;
@@ -409,7 +407,7 @@ _Noreturn void host_main(int host_id) {
                     new_job2->ping_timer = 20;
                     job_q_add(&job_q, new_job2);
                     break;
-                case 'l':
+                case 'l':   // lookup a host id by their hostname
                     sscanf(man_msg, "%s", name);
 
                     // Create a new packet
@@ -438,7 +436,7 @@ _Noreturn void host_main(int host_id) {
                     new_job2->ping_timer = 10;
                     job_q_add(&job_q, new_job2);
                     break;
-                case 'P':
+                case 'P':   // Ping a host by their domain name
                     sscanf(man_msg, "%s", name);
                     // Create a new packet
                     new_packet = (struct packet *) malloc(sizeof(struct packet));
@@ -459,7 +457,7 @@ _Noreturn void host_main(int host_id) {
 
                     // Create a second job to wait for reply
                     new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
-                    dns_ping_received = 0;
+                    dns_lookup_received = 0;
                     new_job2->type = JOB_DNS_PING_WAIT_FOR_REPLY;
                     new_job2->ping_timer = 10;
                     job_q_add(&job_q, new_job2);
@@ -550,7 +548,7 @@ _Noreturn void host_main(int host_id) {
                         free(new_job);
                         break;
                     case (char) PKT_DNS_LOOKUP_REPLY:
-                        dns_register_received = 1;
+                        dns_lookup_received = 1;
                         strcpy(dnsLookupBuffer, in_packet->payload);
                         free(in_packet);
                         free(new_job);
@@ -559,7 +557,6 @@ _Noreturn void host_main(int host_id) {
                         free(in_packet);
                         free(new_job);
                 }
-
             } else {
                 free(in_packet);
             }
@@ -580,21 +577,9 @@ _Noreturn void host_main(int host_id) {
 
                 /* Send packets on all ports */
                 case JOB_SEND_PKT_ALL_PORTS:
-                    if (new_job->packet->type == PKT_CONTROL_PACKET) {
-                        for (k = 0; k < node_port_num; k++) {
-                            new_job->packet->src = (char) host_id;
-                            packet_send(node_port[k], new_job->packet);
-                        }
-                    } else {
-                        for (k = 0; k < node_port_num; k++) {
-                            if (localPortTree[k] == YES) {
-                                packet_send(node_port[k], new_job->packet);
-                            } else {
-                                continue;
-                            }
-                        }
+                    for (k = 0; k < node_port_num; k++) {
+                        packet_send(node_port[k], new_job->packet);
                     }
-
                     free(new_job->packet);
                     free(new_job);
                     break;
@@ -854,7 +839,7 @@ _Noreturn void host_main(int host_id) {
                     break;
                 case JOB_DNS_LOOKUP_WAIT_FOR_REPLY:
                     if(dns_lookup_received == 1) {
-                        if(strncmp(dnsLookupBuffer, "FAIL", 1) == 0) {
+                        if(strncmp(dnsLookupBuffer, "FAIL", 4) == 0) {
                             n = sprintf(man_reply_msg, "DNS lookup failed.");
                             man_reply_msg[n] = '\0';
                             write(man_port->send_fd, man_reply_msg, n + 1);
@@ -867,6 +852,52 @@ _Noreturn void host_main(int host_id) {
                             free(new_job);
                         }
                         memset(dnsLookupBuffer, 0, MAX_MSG_LENGTH);
+                    } else if(new_job->ping_timer > 1) {
+                        new_job->ping_timer--;
+                        job_q_add(&job_q, new_job);
+                    } else { /* Time out */
+                        n = sprintf(man_reply_msg, "DNS lookup time out!");
+                        man_reply_msg[n] = '\0';
+                        write(man_port->send_fd, man_reply_msg, n + 1);
+                        free(new_job);
+                    }
+                    break;
+                case JOB_DNS_PING_WAIT_FOR_REPLY:
+                    if(dns_lookup_received == 1) {
+                        if(strncmp(dnsLookupBuffer, "FAIL", 4) == 0) {
+                            n = sprintf(man_reply_msg, "DNS lookup failed.");
+                            man_reply_msg[n] = '\0';
+                            write(man_port->send_fd, man_reply_msg, n + 1);
+                            free(new_job);
+                        } else {
+                            // Ping host using returned host id
+                            dnsLookupResponse = (int) dnsLookupBuffer[0];
+
+                            // Create new packet to request ping
+                            new_packet = (struct packet *) malloc(sizeof(struct packet));
+                            new_packet->src = (char) host_id;
+                            new_packet->dst = (char) dnsLookupResponse;
+                            new_packet->type = (char) PKT_PING_REQ;
+                            new_packet->length = 0;
+
+                            // Free JOB_DNS_PING_WAIT_FOR_REPLY
+                            free(new_job);
+
+                            // Create job to send ping request
+                            new_job = (struct host_job *) malloc(sizeof(struct host_job));
+                            new_job->packet = new_packet;
+                            new_job->type = JOB_SEND_PKT_ALL_PORTS;
+                            job_q_add(&job_q, new_job);
+
+                            // Create job to wait for ping request
+                            new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
+                            ping_reply_received = 0;
+                            new_job2->type = JOB_PING_WAIT_FOR_REPLY;
+                            new_job2->ping_timer = 10;
+                            job_q_add(&job_q, new_job2);
+                        }
+                        memset(dnsLookupBuffer, 0, MAX_MSG_LENGTH);
+                        dns_lookup_received = 0;
                     } else if(new_job->ping_timer > 1) {
                         new_job->ping_timer--;
                         job_q_add(&job_q, new_job);
