@@ -4,7 +4,7 @@
 #define NAME_LENGTH 100
 #define MAX_FILE_SIZE 1000
 #define TENMILLISEC 10000   /* 10 millisecond sleep */
-#define CONTROL_COUNT 10
+#define CONTROL_COUNT 20
 
 enum yesNo {
     YES, NO
@@ -45,6 +45,10 @@ struct packet { /* struct for a packet */
     char type;
     int length;
     char payload[PAYLOAD_MAX];
+    char packetRootID;
+    int packetRootDist;
+    char packetSenderType;
+    char packetSenderChild;
 };
 
 /* Types of packets */
