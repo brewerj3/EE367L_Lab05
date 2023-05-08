@@ -13,6 +13,24 @@
 
 #define MAX_NAME_LENGTH 50
 
+enum registerAttempt {
+    SUCCESS, NAME_TOO_LONG, INVALID_NAME, ALREADY_REGISTERED
+};
+
+enum server_job_type {
+    JOB_SEND_PKT_ALL_PORTS,
+    JOB_PING_SEND_REPLY,
+    JOB_REGISTER_NEW_DOMAIN,
+    JOB_DNS_PING_REQ
+};
+
+struct server_job {
+    enum server_job_type type;
+    struct packet *packet;
+    int in_port_index;
+    int out_port_index;
+    struct server_job *next;
+};
 
 struct name_buf {
     char name[MAX_NAME_LENGTH];
@@ -130,7 +148,7 @@ _Noreturn void server_main(int host_id) {
             new_packet->length = 4;
             new_packet->payload[0] = (char) localRootID;
             new_packet->payload[1] = (char) localRootDist;
-            new_packet->payload[2] = 'D';
+            new_packet->payload[2] = 'H';
             // Set packetSenderChild when sending the packet
 
             // Create a new job to send the packet, then add to queue

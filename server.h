@@ -3,23 +3,6 @@
 
 #define NAMING_TABLE_SIZE 256
 
-
-enum server_job_type {
-    JOB_SEND_PKT_ALL_PORTS, JOB_PING_SEND_REPLY, JOB_REGISTER_NEW_DOMAIN, JOB_DNS_PING_REQ
-};
-
-
-enum registerAttempt {
-    SUCCESS, NAME_TOO_LONG, INVALID_NAME, ALREADY_REGISTERED
-};
-
-struct server_job {
-    enum server_job_type type;
-    struct packet *packet;
-    int in_port_index;
-    int out_port_index;
-    struct server_job *next;
-};
 struct server_job_queue {
     struct server_job *head;
     struct server_job *tail;

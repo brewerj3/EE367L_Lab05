@@ -13,6 +13,7 @@
 #include "man.h"
 #include "host.h"
 #include "switch2.h"
+#include "server.h"
 
 void main() {
 
@@ -45,6 +46,9 @@ void main() {
             } else if (p_node->type == SWITCH) {
                 /* Execute switch routine, which you have to write */
                 switch_main(p_node->id);
+            } else if (p_node->type == SERVER) {
+                // Execute DNS server routine
+                server_main(p_node->id);
             }
             return;
         }

@@ -20,9 +20,6 @@ struct switch_job {
     struct packet *packet;
     int in_port_index;
     int out_port_index;
-    char fname_upload[100];
-    int ping_timer;
-    int file_upload_dst;
     struct switch_job *next;
 };
 
@@ -169,9 +166,7 @@ _Noreturn void switch_main(int host_id) {
                             }
                         }
                     }
-                    if (in_packet->payload[2] == 'H') {
-                        localPortTree[k] = YES;
-                    } else if (in_packet->payload[2] == 'D') {
+                    if (in_packet->payload[2] == 'H' || in_packet->payload[2] == 'D') {
                         localPortTree[k] = YES;
                     } else if (in_packet->payload[2] == 'S') {
                         if (localParent == k) {
@@ -181,9 +176,8 @@ _Noreturn void switch_main(int host_id) {
                         } else {
                             localPortTree[k] = NO;
                         }
-
                     } else {
-                        localPortTree[k] = NO;
+                        localPortTree[k] = YES;
                     }
                     free(in_packet);
                 } else {
@@ -233,7 +227,7 @@ _Noreturn void switch_main(int host_id) {
                     for (k = 0; k < node_port_num; k++) {
                         if (new_job->packet->type == PKT_CONTROL_PACKET) {
                             for (k = 0; k < node_port_num; k++) {
-                                if (localPortTree[k] == YES) {
+                                if (localParent == k) {
                                     new_job->packet->payload[4] = 'Y';
                                 } else {
                                     new_job->packet->payload[4] = 'N';
@@ -244,12 +238,9 @@ _Noreturn void switch_main(int host_id) {
                             for (k = 0; k < node_port_num; k++) {
                                 if (localPortTree[k] == YES) {
                                     packet_send(node_port[k], new_job->packet);
-                                } else {
-                                    continue;
                                 }
                             }
                         }
-                        packet_send(node_port[k], new_job->packet);
                     }
                     free(new_job->packet);
                     free(new_job);
