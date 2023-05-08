@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <ctype.h>
 
 #include "main.h"
 #include "packet.h"
@@ -265,7 +266,7 @@ _Noreturn void server_main(int host_id) {
                     } else {
                         successFailure = SUCCESS;
                         for(i = 0; i < MAX_NAME_LENGTH; i++) {
-                            if(new_job->packet->payload[i] == ' ') {
+                            if(isspace(new_job->packet->payload[i]) != 0) {
                                 successFailure = INVALID_NAME;
                                 break;
                             }
