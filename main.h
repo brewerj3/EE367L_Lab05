@@ -4,6 +4,7 @@
 #define NAME_LENGTH 100
 #define MAX_FILE_SIZE 1000
 #define TENMILLISEC 10000   /* 10 millisecond sleep */
+#define CONTROL_COUNT 10
 
 enum yesNo {
     YES, NO

@@ -141,7 +141,7 @@ _Noreturn void server_main(int host_id) {
 
         // Send control packets every 40 milliseconds
         controlCount++;
-        if (controlCount > 4) {
+        if (controlCount > CONTROL_COUNT) {
             controlCount = 0;
 
             // Create control packet

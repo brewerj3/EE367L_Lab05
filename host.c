@@ -287,9 +287,9 @@ _Noreturn void host_main(int host_id) {
 
     while (1) {
 
-        // Send control packets every 40 milliseconds
+        // Send control packets every 60 milliseconds
         controlCount++;
-        if (controlCount > 4) {
+        if (controlCount > CONTROL_COUNT) {
             controlCount = 0;
 
             // Create a control packet to send
