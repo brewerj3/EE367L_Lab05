@@ -291,28 +291,24 @@ _Noreturn void server_main(int host_id) {
                         case SUCCESS:
                             new_packet->length = 1;
                             strcpy(new_packet->payload, "S\0");
-                            job_q_add(&job_q, new_job2);
                             break;
                         case NAME_TOO_LONG:
                             new_packet->length = 2;
                             strcpy(new_packet->payload, "FN\0");
-                            job_q_add(&job_q, new_job2);
                             break;
                         case INVALID_NAME:
                             new_packet->length = 2;
                             strcpy(new_packet->payload, "FI\0");
-                            job_q_add(&job_q, new_job2);
                             break;
                         case ALREADY_REGISTERED:
                             new_packet->length = 2;
                             strcpy(new_packet->payload, "FA\0");
-                            job_q_add(&job_q, new_job2);
                             break;
                         default:
                             free(new_packet);
                             free(new_job2);
                     }
-
+                    job_q_add(&job_q, new_job2);
                     free(new_job->packet);
                     free(new_job);
                     break;
