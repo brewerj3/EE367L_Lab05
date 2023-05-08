@@ -190,7 +190,7 @@ _Noreturn void switch_main(int host_id) {
                     if (lookupTable.isValid[dst] == True) {
                         // The lookup table already contains the port to forward to
                         new_job->type = JOB_FORWARD_PACKET;
-                        new_job->out_port_index = lookupTable.portNumber[(int) in_packet->dst];
+                        new_job->out_port_index = lookupTable.portNumber[dst];
                     } else if (lookupTable.isValid[dst] == False) {
                         // The lookup table does not contain the port to forward to
                         new_job->type = JOB_SEND_PKT_ALL_PORTS;

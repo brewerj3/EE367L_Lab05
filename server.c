@@ -150,7 +150,7 @@ _Noreturn void server_main(int host_id) {
             new_packet->type = (char) PKT_CONTROL_PACKET;
             new_packet->length = 0;
             new_packet->packetSenderType = 'H';
-            // Set packetSenderChild when sending the packet
+            new_packet->packetSenderChild = 'Y';
 
             // Create a new job to send the packet, then add to queue
             new_job = (struct server_job *) malloc(sizeof(struct server_job));

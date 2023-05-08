@@ -298,7 +298,7 @@ _Noreturn void host_main(int host_id) {
             new_packet->type = (char) PKT_CONTROL_PACKET;
             new_packet->length = 0;
             new_packet->packetSenderType = 'H';
-            // set packetSenderChild when sending the packet
+            new_packet->packetSenderChild = 'Y';
 
             // Create a new job to send the control packet
             new_job = (struct host_job *) malloc(sizeof(struct host_job));
