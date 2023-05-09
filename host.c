@@ -404,7 +404,7 @@ _Noreturn void host_main(int host_id) {
                     dns_register_received = 0;
                     memset(dnsRegisterBuffer, 0, MAX_DOMAIN_NAME);
                     new_job2->type = JOB_DNS_REGISTER_WAIT_FOR_REPLY;
-                    new_job2->ping_timer = 10;
+                    new_job2->ping_timer = 40;
                     h_job_q_add(&job_q, new_job2);
                     break;
                 case 'l':   // lookup a host id by their hostname
@@ -459,7 +459,7 @@ _Noreturn void host_main(int host_id) {
                     new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
                     dns_lookup_received = 0;
                     new_job2->type = JOB_DNS_PING_WAIT_FOR_REPLY;
-                    new_job2->ping_timer = 10;
+                    new_job2->ping_timer = 40;
                     h_job_q_add(&job_q, new_job2);
                     break;
                 case 'D':   // Download from a host by giving their domain name
@@ -487,7 +487,7 @@ _Noreturn void host_main(int host_id) {
                     dns_lookup_received = 0;
                     strcpy(new_job2->fname_download, domainName);
                     new_job2->type = JOB_DNS_DOWNLOAD_WAIT_FOR_REPLY;
-                    new_job2->ping_timer = 10;
+                    new_job2->ping_timer = 40;
                     h_job_q_add(&job_q, new_job2);
                     break;
                 default:;

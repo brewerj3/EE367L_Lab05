@@ -173,6 +173,7 @@ _Noreturn void server_main(int host_id) {
                 new_job = (struct server_job *) malloc(sizeof(struct server_job));
                 new_job->in_port_index = k;
                 new_job->packet = in_packet;
+                printf("server received from %i\n", (int) in_packet->src);
 
                 // Switch statement to handle packet types
                 switch (in_packet->type) {

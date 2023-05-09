@@ -234,7 +234,8 @@ _Noreturn void switch_main(int host_id) {
                             }
                         } else {
                             for (k = 0; k < node_port_num; k++) {
-                                if (localPortTree[k] == YES ) {
+                                if (k != new_job->in_port_index) {
+                                    printf("sending on port %i \n", k);
                                     packet_send(node_port[k], new_job->packet);
                                 }
                             }
@@ -246,7 +247,9 @@ _Noreturn void switch_main(int host_id) {
 
                     // Send the packet to one specific port
                 case JOB_FORWARD_PACKET:
-                    printf("forwarding\n");
+                    printf("forwarding:\n");
+                    printf("packet->dst = %i\n", (int) new_job->packet->dst);
+                    printf("packet->src = %i\n", (int) new_job->packet->src);
                     packet_send(node_port[new_job->out_port_index], new_job->packet);
                     free(new_job->packet);
                     free(new_job);
