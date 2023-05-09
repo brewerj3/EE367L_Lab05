@@ -190,6 +190,11 @@ _Noreturn void switch_main(int host_id) {
                     if (lookupTable.isValid[dst] == True) {
                         // The lookup table already contains the port to forward to
                         new_job->type = JOB_FORWARD_PACKET;
+#ifdef DEBUG
+                        printf("forwarding\n");
+                        printf("dst = %i\n", dst);
+                        printf("lookupTable.portNumber[dst] = %i\n", lookupTable.portNumber[dst]);
+#endif
                         new_job->out_port_index = lookupTable.portNumber[dst];
                     } else if (lookupTable.isValid[dst] == False) {
                         // The lookup table does not contain the port to forward to
@@ -201,6 +206,11 @@ _Noreturn void switch_main(int host_id) {
                     if (lookupTable.isValid[location] == False) {
                         // Add the port to the lookup table
                         lookupTable.isValid[location] = True;
+#ifdef DEBUG
+                        printf("Changing portNumber\n");
+                        printf("location = %i\n", location);
+                        printf("lookupTable.portNumber[location] = %i\n",new_job->in_port_index);
+#endif
                         lookupTable.portNumber[location] = new_job->in_port_index;
                     }
 
@@ -247,9 +257,10 @@ _Noreturn void switch_main(int host_id) {
 
                     // Send the packet to one specific port
                 case JOB_FORWARD_PACKET:
-                    printf("forwarding:\n");
+                    /*printf("forwarding:\n");
                     printf("packet->dst = %i\n", (int) new_job->packet->dst);
                     printf("packet->src = %i\n", (int) new_job->packet->src);
+                    printf("new_job->out_port_index = %i\n", new_job->out_port_index);*/
                     packet_send(node_port[new_job->out_port_index], new_job->packet);
                     free(new_job->packet);
                     free(new_job);

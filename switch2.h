@@ -14,8 +14,8 @@ struct switch_job_queue {
 };
 
 struct Table {
-    enum valid isValid[MAX_LOOKUP_TABLE_SIZE];
-    int portNumber[MAX_LOOKUP_TABLE_SIZE];
+    enum valid isValid[MAX_LOOKUP_TABLE_SIZE + 1];
+    int portNumber[MAX_LOOKUP_TABLE_SIZE + 1];
 };
 
 _Noreturn void switch_main(int host_id);
