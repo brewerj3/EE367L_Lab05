@@ -176,7 +176,7 @@ _Noreturn void switch_main(int host_id) {
                             localPortTree[k] = NO;
                         }
                     } else {
-                        localPortTree[k] = YES;
+                        localPortTree[k] = NO;
                     }
                     free(in_packet);
                 } else {
