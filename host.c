@@ -844,7 +844,7 @@ _Noreturn void host_main(int host_id) {
                             man_reply_msg[n] = '\0';
                             write(man_port->send_fd, man_reply_msg, n + 1);
                             free(new_job);
-                        } else if (strncmp(man_reply_msg, "FA", 2) == 0) {
+                        } else if (strncmp(dnsRegisterBuffer, "FA", 2) == 0) {
                             n = sprintf(man_reply_msg, "Failed to register: Already registered");
                             man_reply_msg[n] = '\0';
                             write(man_port->send_fd, man_reply_msg, n + 1);

@@ -246,6 +246,7 @@ _Noreturn void switch_main(int host_id) {
 
                     // Send the packet to one specific port
                 case JOB_FORWARD_PACKET:
+                    printf("forwarding\n");
                     packet_send(node_port[new_job->out_port_index], new_job->packet);
                     free(new_job->packet);
                     free(new_job);
