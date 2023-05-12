@@ -371,6 +371,7 @@ void man_main() {
                 break;
             case 'D': // Download from host by giving domain name
                 dns_file_download(curr_host);
+                break;
             case 'q':  /* Quit */
                 return;
             default:

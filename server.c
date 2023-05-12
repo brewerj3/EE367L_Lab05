@@ -328,7 +328,7 @@ _Noreturn void server_main(int host_id) {
                     new_packet->dst = new_job->packet->src;
                     new_packet->src = (char) host_id;
                     new_packet->type = PKT_DNS_LOOKUP_REPLY;
-                    if(dnsHostIDReturn > NAMING_TABLE_SIZE) {
+                    if(dnsHostIDReturn > NAMING_TABLE_SIZE || isRegistered[dnsHostIDReturn] == NO) {
                         new_packet->length = 5;
                         strcpy(new_packet->payload, "FAIL\0");
                     } else {

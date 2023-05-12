@@ -244,8 +244,8 @@ _Noreturn void switch_main(int host_id) {
                             }
                         } else {
                             for (k = 0; k < node_port_num; k++) {
-                                if (k != new_job->in_port_index) {
-                                    printf("sending on port %i \n", k);
+                                if (k != new_job->in_port_index && localPortTree[k] != YES) {
+                                    //printf("sending on port %i from switch %i\n", k, host_id);
                                     packet_send(node_port[k], new_job->packet);
                                 }
                             }
@@ -261,6 +261,7 @@ _Noreturn void switch_main(int host_id) {
                     printf("packet->dst = %i\n", (int) new_job->packet->dst);
                     printf("packet->src = %i\n", (int) new_job->packet->src);
                     printf("new_job->out_port_index = %i\n", new_job->out_port_index);*/
+                    //printf("forwarding from %i to %i:\n",host_id, (int) new_job->packet->dst);
                     packet_send(node_port[new_job->out_port_index], new_job->packet);
                     free(new_job->packet);
                     free(new_job);

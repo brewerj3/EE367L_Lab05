@@ -464,6 +464,8 @@ _Noreturn void host_main(int host_id) {
                     break;
                 case 'D':   // Download from a host by giving their domain name
                     sscanf(man_msg, "%s %s", domainName, name);
+                    //printf("s1 = %s\n",domainName);
+                    //printf("s2 = %s\n",name); @TODO execution passes here
 
                     // Create a packet to lookup their domain name
                     new_packet = (struct packet *) malloc(sizeof(struct packet));
@@ -479,13 +481,13 @@ _Noreturn void host_main(int host_id) {
                     // Create a job to send the packet
                     new_job = (struct host_job *) malloc(sizeof(struct host_job));
                     new_job->packet = new_packet;
-                    new_job->type = JOB_SEND_PKT_ALL_PORTS;
+                    new_job->type = (char) JOB_SEND_PKT_ALL_PORTS;
                     h_job_q_add(&job_q, new_job);
 
                     // Create a second job to wait for reply
                     new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
                     dns_lookup_received = 0;
-                    strcpy(new_job2->fname_download, domainName);
+                    strcpy(new_job2->fname_download, name);
                     new_job2->type = JOB_DNS_DOWNLOAD_WAIT_FOR_REPLY;
                     new_job2->ping_timer = 40;
                     h_job_q_add(&job_q, new_job2);
@@ -963,10 +965,10 @@ _Noreturn void host_main(int host_id) {
                             free(new_job);
 
                             // Create job to send ping request
-                            new_job = (struct host_job *) malloc(sizeof(struct host_job));
-                            new_job->packet = new_packet;
-                            new_job->type = JOB_SEND_PKT_ALL_PORTS;
-                            h_job_q_add(&job_q, new_job);
+                            new_job2 = (struct host_job *) malloc(sizeof(struct host_job));
+                            new_job2->packet = new_packet;
+                            new_job2->type = JOB_SEND_PKT_ALL_PORTS;
+                            h_job_q_add(&job_q, new_job2);
                         }
                         memset(dnsLookupBuffer, 0, MAX_DOMAIN_NAME);
                         dns_lookup_received = 0;
