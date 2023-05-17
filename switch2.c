@@ -158,22 +158,22 @@ _Noreturn void switch_main(int host_id) {
                             localRootID = (int) in_packet->packetRootID;
                             localParent = k;
                             localRootDist = (int) in_packet->packetRootDist + 1;
-                            printf("localParent = %i is node %i at node %i\n", localParent, (int) in_packet->src, host_id);
+                            printf("localParent = %i is node %i at node %i\n", localParent, (int) in_packet->src,
+                                   host_id);
                         } else if ((int) in_packet->packetRootID == localRootID) {
                             if (localRootDist > (int) in_packet->packetRootDist + 1) {
                                 localParent = k;
                                 localRootDist = (int) in_packet->packetRootDist + 1;
-                                printf("localParent = %i is node %i at node %i\n", localParent, (int) in_packet->src, host_id);
+                                printf("localParent = %i is node %i at node %i\n", localParent, (int) in_packet->src,
+                                       host_id);
                             }
                         }
                     }
                     if (in_packet->packetSenderType == 'H') {
                         localPortTree[k] = YES;
-                        //printf("test\n");
                     } else if (in_packet->packetSenderType == 'S') {
                         if (localParent == k) {
                             localPortTree[k] = YES;
-                            //printf("parent\n");
                         } else if (in_packet->packetSenderChild == 'Y') {
                             localPortTree[k] = YES;
                             printf("child\n");
@@ -243,28 +243,18 @@ _Noreturn void switch_main(int host_id) {
                 // Send the packet on all ports
                 case JOB_SEND_PKT_ALL_PORTS:
                     for (k = 0; k < node_port_num; k++) {
-                        if (new_job->packet->type == PKT_CONTROL_PACKET) {
-                            for (k = 0; k < node_port_num; k++) {
-                                if (localParent == k) {
-                                    new_job->packet->packetSenderChild = 'Y';
-                                } else {
-                                    new_job->packet->packetSenderChild = 'N';
-                                }
-
-                                packet_send(node_port[k], new_job->packet);
+                        if ( new_job->packet->type == PKT_CONTROL_PACKET) {
+                            if (localParent == k) {
+                                new_job->packet->packetSenderChild = 'Y';
+                            } else {
+                                new_job->packet->packetSenderChild = 'N';
                             }
+                            packet_send(node_port[k], new_job->packet);
                         } else {
-                            printf("switch %i has %i ports\n", host_id, node_port_num);
-                            for (k = 0; k < node_port_num; k++) {
-                                if(localPortTree[k] == YES) {
-                                    printf("port %i is yes on switch %i\n", k, host_id);
-                                    printf("switch %i sending on port %i from node %i to node %i\n",host_id, k, (int) new_job->packet->src, (int) new_job->packet->dst);
-                                }
-                                if (localPortTree[k] == YES && k != new_job->in_port_index) {
-                                    //printf("sending on port %i from switch %i\n", k, host_id);
-                                    //printf("switch %i sending on port %i from node %i to node %i\n",host_id, k, (int) new_job->packet->src, (int) new_job->packet->dst);
+                            if (localPortTree[k] == YES || localParent == -1) {
+                                printf("switch %i sending on port %i from node %i to node %i\n",host_id, k, (int) new_job->packet->src, (int) new_job->packet->dst);
+                                if(k != new_job->in_port_index) {
                                     packet_send(node_port[k], new_job->packet);
-                                    //
                                 }
                             }
                         }
