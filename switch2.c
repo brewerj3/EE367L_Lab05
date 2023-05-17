@@ -200,6 +200,7 @@ _Noreturn void switch_main(int host_id) {
                     dst = (int) in_packet->dst;
                     int source = (int) in_packet->src;
 
+                    printf("Handling packet from node %i traveling to node %i\n", source, dst);
                     // Check lookup table for the port dst;
                     if (lookupTable.isValid[dst] == True) {
                         // The lookup table already contains the port to forward to
@@ -249,12 +250,19 @@ _Noreturn void switch_main(int host_id) {
                                 } else {
                                     new_job->packet->packetSenderChild = 'N';
                                 }
+
                                 packet_send(node_port[k], new_job->packet);
                             }
                         } else {
+                            printf("switch %i has %i ports\n", host_id, node_port_num);
                             for (k = 0; k < node_port_num; k++) {
+                                if(localPortTree[k] == YES) {
+                                    printf("port %i is yes on switch %i\n", k, host_id);
+                                    printf("switch %i sending on port %i from node %i to node %i\n",host_id, k, (int) new_job->packet->src, (int) new_job->packet->dst);
+                                }
                                 if (localPortTree[k] == YES && k != new_job->in_port_index) {
                                     //printf("sending on port %i from switch %i\n", k, host_id);
+                                    //printf("switch %i sending on port %i from node %i to node %i\n",host_id, k, (int) new_job->packet->src, (int) new_job->packet->dst);
                                     packet_send(node_port[k], new_job->packet);
                                     //
                                 }
