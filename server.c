@@ -19,10 +19,7 @@ enum registerAttempt {
 };
 
 enum server_job_type {
-    JOB_SEND_PKT_ALL_PORTS,
-    JOB_PING_SEND_REPLY,
-    JOB_REGISTER_NEW_DOMAIN,
-    JOB_DNS_PING_REQ
+    JOB_SEND_PKT_ALL_PORTS, JOB_PING_SEND_REPLY, JOB_REGISTER_NEW_DOMAIN, JOB_DNS_PING_REQ
 };
 
 struct server_job {
@@ -151,6 +148,7 @@ _Noreturn void server_main(int host_id) {
             new_packet->length = 0;
             new_packet->packetSenderType = 'H';
             new_packet->packetSenderChild = 'Y';
+            new_packet->dst = (char) 0;
 
             // Create a new job to send the packet, then add to queue
             new_job = (struct server_job *) malloc(sizeof(struct server_job));
@@ -260,20 +258,20 @@ _Noreturn void server_main(int host_id) {
                     break;
                 case JOB_REGISTER_NEW_DOMAIN:
                     // Attempt to add new Domain name to naming table
-                    if(strlen(new_job->packet->payload) > MAX_NAME_LENGTH) {
+                    if (strlen(new_job->packet->payload) > MAX_NAME_LENGTH) {
                         successFailure = NAME_TOO_LONG;
                     } else if (isRegistered[new_job->packet->src] == YES) {
                         successFailure = ALREADY_REGISTERED;
                     } else {
                         successFailure = SUCCESS;
-                        for(i = 0; i < MAX_NAME_LENGTH; i++) {
-                            if(new_job->packet->payload[i] == ' ') {
+                        for (i = 0; i < MAX_NAME_LENGTH; i++) {
+                            if (new_job->packet->payload[i] == ' ') {
                                 successFailure = INVALID_NAME;
                                 break;
                             }
                         }
                     }
-                    if(successFailure == SUCCESS) {
+                    if (successFailure == SUCCESS) {
                         j = sprintf(namingTable[(int) new_job->packet->src], "%s", new_job->packet->payload);
                         namingTable[(int) new_job->packet->src][j] = '\0';
                         isRegistered[(int) new_job->packet->src] = YES;
@@ -290,7 +288,7 @@ _Noreturn void server_main(int host_id) {
                     new_job2->type = JOB_SEND_PKT_ALL_PORTS;
                     new_job2->packet = new_packet;
 
-                    switch(successFailure) {
+                    switch (successFailure) {
                         case SUCCESS:
                             new_packet->length = 1;
                             strcpy(new_packet->payload, "S\0");
@@ -316,8 +314,8 @@ _Noreturn void server_main(int host_id) {
                     free(new_job);
                     break;
                 case JOB_DNS_PING_REQ:
-                    for(i = 0; i < NAMING_TABLE_SIZE; i++) {
-                        if(strncmp(new_job->packet->payload, namingTable[i], new_job->packet->length) == 0) {
+                    for (i = 0; i < NAMING_TABLE_SIZE; i++) {
+                        if (strncmp(new_job->packet->payload, namingTable[i], new_job->packet->length) == 0) {
                             dnsHostIDReturn = i;
                             break;
                         }
@@ -328,7 +326,7 @@ _Noreturn void server_main(int host_id) {
                     new_packet->dst = new_job->packet->src;
                     new_packet->src = (char) host_id;
                     new_packet->type = PKT_DNS_LOOKUP_REPLY;
-                    if(dnsHostIDReturn > NAMING_TABLE_SIZE || isRegistered[dnsHostIDReturn] == NO) {
+                    if (dnsHostIDReturn > NAMING_TABLE_SIZE || isRegistered[dnsHostIDReturn] == NO) {
                         new_packet->length = 5;
                         strcpy(new_packet->payload, "FAIL\0");
                     } else {

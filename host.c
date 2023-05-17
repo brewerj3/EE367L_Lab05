@@ -287,9 +287,9 @@ _Noreturn void host_main(int host_id) {
 
     while (1) {
 
-        // Send control packets every 100 milliseconds
+        // Send control packets every so often
         controlCount++;
-        if (controlCount > CONTROL_COUNT) {
+        if (controlCount >= CONTROL_COUNT) {
             controlCount = 0;
 
             // Create a control packet to send
@@ -299,6 +299,7 @@ _Noreturn void host_main(int host_id) {
             new_packet->length = 0;
             new_packet->packetSenderType = 'H';
             new_packet->packetSenderChild = 'Y';
+            new_packet->dst = (char) 0;
 
             // Create a new job to send the control packet
             new_job = (struct host_job *) malloc(sizeof(struct host_job));
@@ -509,7 +510,6 @@ _Noreturn void host_main(int host_id) {
             if ((n > 0) && (in_packet->type == (char) PKT_CONTROL_PACKET)) {
                 free(in_packet);
             } else if ((n > 0) && ((int) in_packet->dst == host_id)) {
-
                 new_job = (struct host_job *) malloc(sizeof(struct host_job));
                 new_job->in_port_index = k;
                 new_job->packet = in_packet;

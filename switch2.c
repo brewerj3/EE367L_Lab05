@@ -72,7 +72,7 @@ _Noreturn void switch_main(int host_id) {
 
     int i, k, n;
     int dst;                        // Destination of a packet
-    int controlCount = 0;           // Counts up to 4 then resets and sends a control packet
+    int controlCount = 0;           // Counts up to CONTROL_COUNT then resets and sends a control packet
 
     struct packet *in_packet;       // Incoming packet
     struct packet *new_packet;
@@ -110,7 +110,7 @@ _Noreturn void switch_main(int host_id) {
     // Need to initialize the lookup table
     struct Table lookupTable;
     //Fill out the isValid enum
-    for (i = 0; i < MAX_LOOKUP_TABLE_SIZE; i++) {
+    for (i = 0; i < MAX_LOOKUP_TABLE_SIZE + 2; i++) {
         lookupTable.isValid[i] = False;
     }
 
@@ -120,9 +120,9 @@ _Noreturn void switch_main(int host_id) {
     while (1) {
         // NO need to get commands from the manager
 
-        // Send control packets every 100 milliseconds
+        // Send control packets every so often
         controlCount++;
-        if (controlCount > CONTROL_COUNT) {
+        if (controlCount >= CONTROL_COUNT) {
             controlCount = 0;
 
             // Create a control packet to send
@@ -133,6 +133,7 @@ _Noreturn void switch_main(int host_id) {
             new_packet->packetRootID = (char) localRootID;
             new_packet->packetRootDist = localRootDist;
             new_packet->packetSenderType = 'S';
+            new_packet->dst = (char) 0;
             // set packetSenderChild when sending the packet
 
             // Create a new job to send the control packet
@@ -140,7 +141,6 @@ _Noreturn void switch_main(int host_id) {
             new_job->packet = new_packet;
             new_job->type = JOB_SEND_PKT_ALL_PORTS;
             s_job_q_add(&job_q, new_job);
-
         }
 
         // Scan all ports
@@ -154,29 +154,42 @@ _Noreturn void switch_main(int host_id) {
                 // Process control packets
                 if (in_packet->type == (char) PKT_CONTROL_PACKET) {
                     if (in_packet->packetSenderType == 'S') {
-                        if (in_packet->packetRootID < localRootID) {
+                        if ((int) in_packet->packetRootID < localRootID) {
                             localRootID = (int) in_packet->packetRootID;
                             localParent = k;
                             localRootDist = (int) in_packet->packetRootDist + 1;
+                            printf("localParent = %i is node %i at node %i\n", localParent, (int) in_packet->src, host_id);
                         } else if ((int) in_packet->packetRootID == localRootID) {
                             if (localRootDist > (int) in_packet->packetRootDist + 1) {
                                 localParent = k;
                                 localRootDist = (int) in_packet->packetRootDist + 1;
+                                printf("localParent = %i is node %i at node %i\n", localParent, (int) in_packet->src, host_id);
                             }
                         }
                     }
                     if (in_packet->packetSenderType == 'H') {
                         localPortTree[k] = YES;
+                        //printf("test\n");
                     } else if (in_packet->packetSenderType == 'S') {
                         if (localParent == k) {
                             localPortTree[k] = YES;
+                            //printf("parent\n");
                         } else if (in_packet->packetSenderChild == 'Y') {
                             localPortTree[k] = YES;
+                            printf("child\n");
                         } else {
                             localPortTree[k] = NO;
                         }
                     } else {
                         localPortTree[k] = NO;
+
+                    }
+
+                    // check if can add to lookup table
+                    if (lookupTable.isValid[(int) in_packet->src] == False) {
+                        // Can add to lookup table
+                        lookupTable.isValid[(int) in_packet->src] = True;
+                        lookupTable.portNumber[(int) in_packet->src] = k;
                     }
                     free(in_packet);
                 } else {
@@ -185,16 +198,12 @@ _Noreturn void switch_main(int host_id) {
                     new_job->in_port_index = k;
                     new_job->packet = in_packet;
                     dst = (int) in_packet->dst;
+                    int source = (int) in_packet->src;
 
                     // Check lookup table for the port dst;
                     if (lookupTable.isValid[dst] == True) {
                         // The lookup table already contains the port to forward to
                         new_job->type = JOB_FORWARD_PACKET;
-#ifdef DEBUG
-                        printf("forwarding\n");
-                        printf("dst = %i\n", dst);
-                        printf("lookupTable.portNumber[dst] = %i\n", lookupTable.portNumber[dst]);
-#endif
                         new_job->out_port_index = lookupTable.portNumber[dst];
                     } else if (lookupTable.isValid[dst] == False) {
                         // The lookup table does not contain the port to forward to
@@ -202,16 +211,16 @@ _Noreturn void switch_main(int host_id) {
                     }
 
                     // Check if a port can be added to the lookup table
-                    int location = (int) in_packet->src;
-                    if (lookupTable.isValid[location] == False) {
+
+                    if (lookupTable.isValid[source] == False) {
                         // Add the port to the lookup table
-                        lookupTable.isValid[location] = True;
+                        lookupTable.isValid[source] = True;
+                        lookupTable.portNumber[source] = new_job->in_port_index;
 #ifdef DEBUG
                         printf("Changing portNumber\n");
-                        printf("location = %i\n", location);
-                        printf("lookupTable.portNumber[location] = %i\n",new_job->in_port_index);
+                        printf("source = %i\n", source);
+                        printf("lookupTable.portNumber[source] = %i\n",new_job->in_port_index);
 #endif
-                        lookupTable.portNumber[location] = new_job->in_port_index;
                     }
 
                     s_job_q_add(&job_q, new_job);
@@ -244,9 +253,10 @@ _Noreturn void switch_main(int host_id) {
                             }
                         } else {
                             for (k = 0; k < node_port_num; k++) {
-                                if (k != new_job->in_port_index && localPortTree[k] != YES) {
+                                if (localPortTree[k] == YES && k != new_job->in_port_index) {
                                     //printf("sending on port %i from switch %i\n", k, host_id);
                                     packet_send(node_port[k], new_job->packet);
+                                    //
                                 }
                             }
                         }
