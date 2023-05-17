@@ -200,7 +200,7 @@ _Noreturn void switch_main(int host_id) {
                     dst = (int) in_packet->dst;
                     int source = (int) in_packet->src;
 
-                    printf("Handling packet from node %i traveling to node %i\n", source, dst);
+                    printf("switch %i Handling packet from node %i traveling to node %i\n",host_id, source, dst);
                     // Check lookup table for the port dst;
                     if (lookupTable.isValid[dst] == True) {
                         // The lookup table already contains the port to forward to
