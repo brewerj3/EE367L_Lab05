@@ -154,18 +154,19 @@ _Noreturn void switch_main(int host_id) {
                 // Process control packets
                 if (in_packet->type == (char) PKT_CONTROL_PACKET) {
                     if (in_packet->packetSenderType == 'S') {
+                        if(host_id == 6) {
+                            //printf("localParent = %i is node %i at node %i. localRootDist = %i localRootID = %i\n", localParent, (int) in_packet->src, host_id, localRootDist, localRootID);
+                        }
                         if ((int) in_packet->packetRootID < localRootID) {
                             localRootID = (int) in_packet->packetRootID;
                             localParent = k;
                             localRootDist = (int) in_packet->packetRootDist + 1;
-                            printf("localParent = %i is node %i at node %i\n", localParent, (int) in_packet->src,
-                                   host_id);
+                            printf("localParent = %i is node %i at node %i. localRootDist = %i localRootID = %i\n", localParent, (int) in_packet->src, host_id, localRootDist, localRootID);
                         } else if ((int) in_packet->packetRootID == localRootID) {
                             if (localRootDist > (int) in_packet->packetRootDist + 1) {
                                 localParent = k;
                                 localRootDist = (int) in_packet->packetRootDist + 1;
-                                printf("localParent = %i is node %i at node %i\n", localParent, (int) in_packet->src,
-                                       host_id);
+                                printf("localParent = %i is node %i at node %i. localRootDist = %i localRootID = %i\n", localParent, (int) in_packet->src, host_id, localRootDist, localRootID);
                             }
                         }
                     }
@@ -243,7 +244,7 @@ _Noreturn void switch_main(int host_id) {
                 // Send the packet on all ports
                 case JOB_SEND_PKT_ALL_PORTS:
                     for (k = 0; k < node_port_num; k++) {
-                        if ( new_job->packet->type == PKT_CONTROL_PACKET) {
+                        if (new_job->packet->type == (char) PKT_CONTROL_PACKET) {
                             if (localParent == k) {
                                 new_job->packet->packetSenderChild = 'Y';
                             } else {
