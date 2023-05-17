@@ -160,13 +160,13 @@ _Noreturn void switch_main(int host_id) {
                         if ((int) in_packet->packetRootID < localRootID) {
                             localRootID = (int) in_packet->packetRootID;
                             localParent = k;
-                            localRootDist = (int) in_packet->packetRootDist + 1;
-                            printf("localParent = %i is node %i at node %i. localRootDist = %i localRootID = %i\n", localParent, (int) in_packet->src, host_id, localRootDist, localRootID);
+                            localRootDist = in_packet->packetRootDist + 1;
+                            printf("node %is localParent is on port %i and is node %i . localRootDist = %i localRootID = %i\n", host_id, localParent, (int) in_packet->src, localRootDist, localRootID);
                         } else if ((int) in_packet->packetRootID == localRootID) {
-                            if (localRootDist > (int) in_packet->packetRootDist + 1) {
+                            if (localRootDist > in_packet->packetRootDist + 1) {
                                 localParent = k;
-                                localRootDist = (int) in_packet->packetRootDist + 1;
-                                printf("localParent = %i is node %i at node %i. localRootDist = %i localRootID = %i\n", localParent, (int) in_packet->src, host_id, localRootDist, localRootID);
+                                localRootDist = in_packet->packetRootDist + 1;
+                                printf("node %is localParent is on port %i and is node %i . localRootDist = %i localRootID = %i\n", host_id, localParent, (int) in_packet->src, localRootDist, localRootID);
                             }
                         }
                     }
