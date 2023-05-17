@@ -76,7 +76,7 @@ int setupListeningSocket(struct net_port *port) {
 
 // This sends the packet to the net_port.
 void packet_send(struct net_port *port, struct packet *p) {
-    char msg[PAYLOAD_MAX + 7];
+    char msg[PAYLOAD_MAX + 8];
     int i;
     static int alreadyConnected = 0;    // 0 is false
     if (port->type == PIPE) {
@@ -92,11 +92,11 @@ void packet_send(struct net_port *port, struct packet *p) {
 
         // This adds the payload to the rest of the packet
         for (i = 0; i < p->length; i++) {
-            msg[i + 7] = p->payload[i];
+            msg[i + 8] = p->payload[i];
         }
 
         // This actually sends the packet
-        write(port->pipe_send_fd, msg, p->length + 7);
+        write(port->pipe_send_fd, msg, p->length + 8);
     } else if (port->type == SOCKET) {
         msg[0] = (char) p->src;     // The source of the packet being sent, (the host id)
         msg[1] = (char) p->dst;     // The destination of the packet being sent
@@ -108,7 +108,7 @@ void packet_send(struct net_port *port, struct packet *p) {
         msg[7] = (char) p->packetSenderChild;
         // This adds the payload to the rest of the packet
         for (i = 0; i < p->length; i++) {
-            msg[i + 7] = p->payload[i];
+            msg[i + 8] = p->payload[i];
         }
 
         //create sockfd and connect to the port
@@ -143,7 +143,7 @@ void packet_send(struct net_port *port, struct packet *p) {
         }
 
         // Send the packet
-        send(sockfd, msg, p->length + 7, 0);
+        send(sockfd, msg, p->length + 8, 0);
 
         // Close the socket when done
         close(sockfd);
@@ -153,13 +153,13 @@ void packet_send(struct net_port *port, struct packet *p) {
 
 // This receives a packet
 int packet_recv(struct net_port *port, struct packet *p) {
-    char msg[PAYLOAD_MAX + 7];
+    char msg[PAYLOAD_MAX + 8];
     int n;
     int i;
     static int setup = 1;
     if (port->type == PIPE) {
         // n is an error code given by the read function
-        n = read(port->pipe_recv_fd, msg, PAYLOAD_MAX + 7);
+        n = read(port->pipe_recv_fd, msg, PAYLOAD_MAX + 8);
         if (n > 0) {
             p->src = (char) msg[0];             // The host id of the source
             p->dst = (char) msg[1];             // The host id of the intended destination of the packet
@@ -170,7 +170,7 @@ int packet_recv(struct net_port *port, struct packet *p) {
             p->packetSenderType = (char) msg[6];// The packet sender type
             p->packetSenderChild = (char) msg[7];
             for (i = 0; i < p->length; i++) {   // This puts the payload from the message into the packet
-                p->payload[i] = msg[i + 7];
+                p->payload[i] = msg[i + 8];
             }
         }
     } else if (port->type == SOCKET) {
@@ -194,7 +194,7 @@ int packet_recv(struct net_port *port, struct packet *p) {
             return 0;
         }
 
-        n = recv(new_fd, msg, PAYLOAD_MAX + 7, 0);
+        n = recv(new_fd, msg, PAYLOAD_MAX + 8, 0);
         close(new_fd);
         if (n > 0) {
             //printf("recieved on socket\n");
@@ -207,7 +207,7 @@ int packet_recv(struct net_port *port, struct packet *p) {
             p->packetSenderType = (char) msg[6];// The packet sender type
             p->packetSenderChild = (char) msg[7];
             for (i = 0; i < p->length; i++) {   // This puts the payload from the message into the packet
-                p->payload[i] = msg[i + 7];
+                p->payload[i] = msg[i + 8];
             }
         }
     }

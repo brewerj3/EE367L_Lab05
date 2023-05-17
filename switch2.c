@@ -173,11 +173,14 @@ _Noreturn void switch_main(int host_id) {
                     if (in_packet->packetSenderType == 'H') {
                         localPortTree[k] = YES;
                     } else if (in_packet->packetSenderType == 'S') {
+                        if(host_id == 4 && (int) in_packet->src == 6) {
+                            //printf("switch 4 received switch control packet from switch 6. packetSenderChild = %c\n", in_packet->packetSenderChild);
+                        }
                         if (localParent == k) {
                             localPortTree[k] = YES;
                         } else if (in_packet->packetSenderChild == 'Y') {
                             localPortTree[k] = YES;
-                            printf("child\n");
+                            //printf("child\n");
                         } else {
                             localPortTree[k] = NO;
                         }
