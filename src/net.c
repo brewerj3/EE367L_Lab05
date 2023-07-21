@@ -528,7 +528,6 @@ int load_net_data_file() {
                 strcpy(g_net_link[i].port_recv, port0);         // Port to listen to
                 strcpy(g_net_link[i].sendingDomain, domain1);   // Domain to send to
                 strcpy(g_net_link[i].port_send, port1);         // Port to send to
-
             } else {
                 printf("   net.c: Unidentified link type\n");
             }
