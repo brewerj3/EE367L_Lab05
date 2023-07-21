@@ -39,12 +39,6 @@ struct server_job {
     struct server_job *next;    ///< The next job in queue
 };
 
-struct name_buf {
-    char name[MAX_NAME_LENGTH];
-    int name_length;
-    int src;
-};
-
 /// Add a job to the queue
 void job_q_add(struct server_job_queue *j_q, struct server_job *j) {
     if (j_q->head == NULL) {

@@ -12,19 +12,22 @@ enum yesNo {
 
 /// The types of network nodes
 enum NetNodeType { /* Types of network nodes */
-    HOST, SWITCH, SERVER
+    HOST,   ///< A host recieves commands from the manager and acts upon them
+    SWITCH, ///< A switch recieves packets and sends on all ports but the one recieved, unless the packet destination is in the lookup table in which case the packet is forwarded
+    SERVER  ///< A simple domain name server that registers domain names for hosts and can return host ids when a host performs lookups
 };
 
 /// The types of network links
 enum NetLinkType { /* Types of links */
-    PIPE, SOCKET
+    PIPE,   ///< Indicates a pipe was used for the link
+    SOCKET  ///< Indicates a socket was used for the link
 };
 
 /// Used to make a linked list of all nodes in the network, and store their type and Id
 struct net_node { /* Network node, e.g., host or switch */
-    enum NetNodeType type;
-    int id;
-    struct net_node *next;
+    enum NetNodeType type;  ///< Type of network node
+    int id;                 ///< Node id
+    struct net_node *next;  ///< Next node in the linked list
 };
 
 /// All the information a port needs to communicate
