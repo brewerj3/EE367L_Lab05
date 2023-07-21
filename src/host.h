@@ -20,15 +20,15 @@ enum host_job_type {
 
 /// Contains information needed to store a job in the job queue
 struct host_job {
-    enum host_job_type type;
-    struct packet *packet;
-    int in_port_index;
-    int out_port_index;
-    char fname_download[100];
-    char fname_upload[100];
-    int ping_timer;
-    int file_upload_dst;
-    struct host_job *next;
+    enum host_job_type type;    ///< The type of host_job
+    struct packet *packet;      ///< An attached packet for the job
+    int in_port_index;          ///< The port the packet came in from
+    int out_port_index;         ///< The port to send the packet on
+    char fname_download[100];   ///< Name of the file to download
+    char fname_upload[100];     ///< Name of the file to upload
+    int ping_timer;             ///< Timer counts down to wait for ping response
+    int file_upload_dst;        ///< The destination of the file to upload
+    struct host_job *next;      ///< The next job in the job queue
 };
 
 /// The structure of the job queue

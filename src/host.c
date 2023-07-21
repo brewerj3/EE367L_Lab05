@@ -25,9 +25,9 @@
 /* Types of packets */
 
 struct file_buf {
-    char name[MAX_FILE_NAME];
-    int name_length;
-    char buffer[MAX_FILE_BUFFER + 1];
+    char name[MAX_FILE_NAME];           ///< Holds the name of a file
+    int name_length;                    ///< Holds the length of the file name
+    char buffer[MAX_FILE_BUFFER + 1];   ///< Holds the first 1000 bytes of the file
     int head;
     int tail;
     int occ;
