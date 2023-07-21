@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.25)
 
 set(projname "Network_simulator")
 project(${projname}
-        VERSION 4.0
+        VERSION 2.0
         DESCRIPTION "Simple network simulator using pipes and sockets"
         LANGUAGES C )
 message( STATUS "CMAKE_SOURCE_DIR = [${CMAKE_SOURCE_DIR}]" )
