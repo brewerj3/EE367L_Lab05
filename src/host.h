@@ -3,6 +3,7 @@
  */
 
 // Added JOB_FILE_UPLOAD_MIDDLE
+/// Jobs performed by a host node
 enum host_job_type {
     JOB_SEND_PKT_ALL_PORTS,
     JOB_PING_SEND_REPLY,
@@ -17,6 +18,7 @@ enum host_job_type {
     JOB_DNS_DOWNLOAD_WAIT_FOR_REPLY,
 };
 
+/// Contains information needed to store a job in the job queue
 struct host_job {
     enum host_job_type type;
     struct packet *packet;
@@ -29,7 +31,7 @@ struct host_job {
     struct host_job *next;
 };
 
-
+/// The structure of the job queue
 struct host_job_queue {
     struct host_job *head;
     struct host_job *tail;
