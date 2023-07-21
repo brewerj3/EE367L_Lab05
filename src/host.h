@@ -33,8 +33,8 @@ struct host_job {
 
 /// The structure of the job queue
 struct host_job_queue {
-    struct host_job *head;
-    struct host_job *tail;
+    struct host_job *head;  ///< Head of the host job queue
+    struct host_job *tail;  ///< tail of the host job queue
     int occ;
 };
 
