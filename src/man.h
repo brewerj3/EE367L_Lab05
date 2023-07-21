@@ -10,6 +10,7 @@
  *  and replies between the manager and hosts
  */
 
+/// Linked list of ports at the host side
 struct man_port_at_host {  /* Port located at the man */
     int host_id;
     int send_fd;
@@ -17,6 +18,7 @@ struct man_port_at_host {  /* Port located at the man */
     struct man_port_at_host *next;
 };
 
+/// Linked list of ports at the manager side
 struct man_port_at_man {  /* Port located at the host */
     int host_id;
     int send_fd;
@@ -27,4 +29,5 @@ struct man_port_at_man {  /* Port located at the host */
 /*
  * Main loop for the manager.
  */
+/// The main function of the manager, loops until user quits, then kills all other processes
 void man_main();
