@@ -5,17 +5,17 @@
 // Added JOB_FILE_UPLOAD_MIDDLE
 /// Jobs performed by a host node
 enum host_job_type {
-    JOB_SEND_PKT_ALL_PORTS,
-    JOB_PING_SEND_REPLY,
-    JOB_PING_WAIT_FOR_REPLY,
-    JOB_FILE_UPLOAD_SEND,
-    JOB_FILE_UPLOAD_RECV_START,
-    JOB_FILE_UPLOAD_RECV_END,
-    JOB_FILE_UPLOAD_RECV_MIDDLE,
-    JOB_DNS_REGISTER_WAIT_FOR_REPLY,
-    JOB_DNS_LOOKUP_WAIT_FOR_REPLY,  // Should be different response from the next job
-    JOB_DNS_PING_WAIT_FOR_REPLY,
-    JOB_DNS_DOWNLOAD_WAIT_FOR_REPLY,
+    JOB_SEND_PKT_ALL_PORTS,         ///< Send the packet on all non manager ports
+    JOB_PING_SEND_REPLY,            ///< Send a reply to a ping request
+    JOB_PING_WAIT_FOR_REPLY,        ///< Wait for a ping reply
+    JOB_FILE_UPLOAD_SEND,           ///< Upload a file to a host
+    JOB_FILE_UPLOAD_RECV_START,     ///< Receive the start of a upload from a host
+    JOB_FILE_UPLOAD_RECV_END,       ///< Receive the end of a upload from a host
+    JOB_FILE_UPLOAD_RECV_MIDDLE,    ///< Receive the middle of a upload from a host
+    JOB_DNS_REGISTER_WAIT_FOR_REPLY,    ///< Wait for a reply from the DNS server
+    JOB_DNS_LOOKUP_WAIT_FOR_REPLY,      ///< Wait for a lookup request response from the DNS server
+    JOB_DNS_PING_WAIT_FOR_REPLY,        ///< Wait for a DNS ping response
+    JOB_DNS_DOWNLOAD_WAIT_FOR_REPLY,    ///< Wait for DNS lookup response, if name exists, try download the file from the host pointed to by the server
 };
 
 /// Contains information needed to store a job in the job queue

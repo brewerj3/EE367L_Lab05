@@ -14,20 +14,29 @@
 
 #define MAX_NAME_LENGTH 50
 
+/// The results of attempt to register a domain name
 enum registerAttempt {
-    SUCCESS, NAME_TOO_LONG, INVALID_NAME, ALREADY_REGISTERED
+    SUCCESS,            ///< The name was successfully registered
+    NAME_TOO_LONG,      ///< The name was not registered because it was too long
+    INVALID_NAME,       ///< The name was not registered because it was invalid
+    ALREADY_REGISTERED  ///< The name was not registered because it was already registered
 };
 
+/// The types of server jobs the server executes
 enum server_job_type {
-    JOB_SEND_PKT_ALL_PORTS, JOB_PING_SEND_REPLY, JOB_REGISTER_NEW_DOMAIN, JOB_DNS_PING_REQ
+    JOB_SEND_PKT_ALL_PORTS,     ///< Send a packet on every connected port that is not a manager port
+    JOB_PING_SEND_REPLY,        ///< Send a reply to a ping request
+    JOB_REGISTER_NEW_DOMAIN,    ///< Attempt to register a new domain name
+    JOB_DNS_PING_REQ            ///< Ping a host and request a acknowledgment
 };
 
+/// Contains information needed to store a job in the job queue
 struct server_job {
-    enum server_job_type type;
-    struct packet *packet;
-    int in_port_index;
-    int out_port_index;
-    struct server_job *next;
+    enum server_job_type type;  ///< The type of job to execute
+    struct packet *packet;      ///< An attached packet if needed
+    int in_port_index;          ///< Which port the packet was received on
+    int out_port_index;         ///< Which port to send the packet on
+    struct server_job *next;    ///< The next job in queue
 };
 
 struct name_buf {
@@ -36,6 +45,7 @@ struct name_buf {
     int src;
 };
 
+/// Add a job to the queue
 void job_q_add(struct server_job_queue *j_q, struct server_job *j) {
     if (j_q->head == NULL) {
         j_q->head = j;
@@ -49,7 +59,7 @@ void job_q_add(struct server_job_queue *j_q, struct server_job *j) {
     }
 }
 
-/* Remove job from the job queue, and return pointer to the job*/
+/// Remove job from the job queue, and return pointer to the job
 struct server_job *job_q_remove(struct server_job_queue *j_q) {
     struct server_job *j;
 
@@ -60,13 +70,14 @@ struct server_job *job_q_remove(struct server_job_queue *j_q) {
     return (j);
 }
 
-/* Initialize job queue */
+/// Initialize job queue
 void job_q_init(struct server_job_queue *j_q) {
     j_q->occ = 0;
     j_q->head = NULL;
     j_q->tail = NULL;
 }
 
+/// Return the number of jobs in the job queue
 int job_q_num(struct server_job_queue *j_q) {
     return j_q->occ;
 }
