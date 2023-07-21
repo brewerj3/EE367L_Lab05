@@ -81,14 +81,14 @@ void packet_send(struct net_port *port, struct packet *p) {
     static int alreadyConnected = 0;    // 0 is false
     if (port->type == PIPE) {
         // The first 4 parts of the array contain information about the packet
-        msg[0] = (char) p->src;     ///< The source of the packet being sent, (the host id)
-        msg[1] = (char) p->dst;     ///< The destination of the packet being sent
-        msg[2] = (char) p->type;    ///< The type of packet being sent
-        msg[3] = (char) p->length;  ///< The length of the packet being sent
-        msg[4] = (char) p->packetRootID;    ///< The Id the switch believes to be the root
-        msg[5] = (char) p->packetRootDist;  ///< The distance to the believed root
-        msg[6] = (char) p->packetSenderType;    ///< The type of node sending the packet
-        msg[7] = (char) p->packetSenderChild;   ///< If the packets sender is a child of the recipient
+        msg[0] = (char) p->src;     // The source of the packet being sent, (the host id)
+        msg[1] = (char) p->dst;     // The destination of the packet being sent
+        msg[2] = (char) p->type;    // The type of packet being sent
+        msg[3] = (char) p->length;  // The length of the packet being sent
+        msg[4] = (char) p->packetRootID;    // The Id the switch believes to be the root
+        msg[5] = (char) p->packetRootDist;  // The distance to the believed root
+        msg[6] = (char) p->packetSenderType;    // The type of node sending the packet
+        msg[7] = (char) p->packetSenderChild;   // If the packets sender is a child of the recipient
 
         // This adds the payload to the rest of the packet
         for (i = 0; i < p->length; i++) {
